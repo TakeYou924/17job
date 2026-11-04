@@ -1,0 +1,14 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { analyze, friction, recommend } from '../src/lib/analysis.ts';
+import { localFeedback } from '../src/lib/feedback.ts';
+import { initialProgress, parseProgress } from '../src/lib/storage.ts';
+const questions=JSON.parse(readFileSync(new URL('../src/data/questions.json',import.meta.url),'utf8'));
+const jobs=JSON.parse(readFileSync(new URL('../src/data/jobs.json',import.meta.url),'utf8'));
+test('17 questions have all original option texts',()=>{assert.equal(questions.length,17); assert.deepEqual(questions.map((q:{id:number})=>q.id),Array.from({length:17},(_,i)=>i+1));assert.ok(questions.every((q:{a:string;b:string})=>q.a && q.b));});
+test('only selected difficult environments appear; both does not infer a preference',()=>{assert.deepEqual(analyze(questions,{1:'A',2:'B',3:'both'}).map(x=>x.environment),[questions[0].a,questions[1].b]);assert.deepEqual(analyze(questions,{1:'both'}),[]);});
+test('recommendations expose overlap and exclude completed job',()=>{assert.deepEqual(friction(jobs[0].environments,{4:'B',6:'both'}),[4]);const r=recommend(jobs,{4:'B'},'planner');assert.equal(r.length,4);assert.equal(r.some((j:{id:string})=>j.id==='planner'),false);assert.equal(r.at(-1)?.id,'designer');});
+test('four interactive missions give concrete local feedback',async()=>{assert.equal(jobs[0].missions.length,4);for(const m of jobs[0].missions){const f=await localFeedback.evaluate(m,'사용자 사실 가설 확인 품절 이유 이번 지표 위험');assert.equal(f.source,'local');assert.ok(f.observation.length>10);assert.ok(f.next.length>10);}});
+test('saved progress roundtrips; corrupt data and future schemas reset safely',()=>{assert.deepEqual(parseProgress(JSON.stringify(initialProgress)),initialProgress);for(const raw of ['broken','null',JSON.stringify({...initialProgress,version:2}),JSON.stringify({...initialProgress,answers:{1:'invalid'}}),JSON.stringify({...initialProgress,feedback:[{bad:true},null,null,null]})])assert.deepEqual(parseProgress(raw),initialProgress);});
+test('incomplete survey cannot restore results; mission drafts survive',()=>{assert.equal(parseProgress(JSON.stringify({...initialProgress,stage:'results'})).stage,'survey');const s={...initialProgress,responses:['작성 중','','','']};assert.equal(parseProgress(JSON.stringify(s)).responses[0],'작성 중');});
