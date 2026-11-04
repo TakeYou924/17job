@@ -76,16 +76,27 @@ function ReportHeader({
   report,
   date,
   preview = false,
+  compact = false,
 }: {
   report: EnvironmentReport;
   date: string | null;
   preview?: boolean;
+  compact?: boolean;
 }) {
   return (
     <header className="report-heading">
-      <span>WORK ENVIRONMENT REPORT</span>
-      <h2>나의 업무 환경 탐색 결과</h2>
-      <p>17개 응답을 바탕으로 일할 때 고려할 조건을 정리했어요.</p>
+      {!compact && (
+        <>
+          <span>WORK ENVIRONMENT REPORT</span>
+          <h2>나의 업무 환경 탐색 결과</h2>
+          <p>17개 응답을 바탕으로 일할 때 고려할 조건을 정리했어요.</p>
+        </>
+      )}
+      {compact && (
+        <p className="report-complete-status">
+          {report.responseCount}문항 응답 완료
+        </p>
+      )}
       <dl className="report-metadata">
         <div>
           <dt>{preview ? "샘플 생성일" : "검사 완료일"}</dt>
@@ -192,10 +203,14 @@ function Domains({
         >
           <h4>{domain.title}</h4>
           <p>
-            {(domain.selected.length
-              ? domain.summary
-              : [domain.summary[0]]
-            ).join(" ")}
+            {print
+              ? (domain.selected.length
+                  ? domain.summary
+                  : [domain.summary[0]]
+                ).join(" ")
+              : domain.selected.length
+                ? `${domain.selected.map((item) => `‘${item.condition}’`).join(", ")}에 부담을 표시했어요.`
+                : domain.summary[0]}
           </p>
           {!print && (
             <details className="report-domain-details">
@@ -208,6 +223,9 @@ function Domains({
                   ? `${domain.selected.length}개 부담 조건`
                   : `둘 다 문제 없음 ${domain.bothCount}개`}
               </summary>
+              <p className="report-domain-context">
+                {domain.summary.join(" ")}
+              </p>
               {domain.details.map((item) => (
                 <div key={item.id} className="report-individual-detail">
                   <b>{item.condition}</b>
@@ -354,34 +372,48 @@ export default function WorkEnvironmentReport({
   completedAt = null,
   onEdit,
   preview = false,
+  compactHeader = false,
 }: {
   answers: Answers;
   completedAt?: string | null;
   onEdit?: () => void;
   preview?: boolean;
+  compactHeader?: boolean;
 }) {
   const report = generateReport(questions, answers, data);
   return (
     <div className="interpretation-report">
       <div className="report-web">
-        <ReportHeader report={report} date={completedAt} preview={preview} />
+        <ReportHeader
+          report={report}
+          date={completedAt}
+          preview={preview}
+          compact={compactHeader}
+        />
         <Highlights report={report} />
-        <WorkScenes report={report} />
+        {report.scenes.length > 0 && (
+          <details className="report-scenes-details">
+            <summary>실제 업무 상황 자세히 보기</summary>
+            <WorkScenes report={report} />
+          </details>
+        )}
         <Domains report={report} />
         {report.additional.length > 0 && (
           <section className="report-section report-additional">
-            <h3>함께 고려하면 좋은 조건</h3>
-            <div className="report-card-grid">
-              {report.additional.map((item) => (
-                <FindingCard key={item.id} finding={item} />
-              ))}
-            </div>
+            <details>
+              <summary>함께 고려할 조건 더 보기</summary>
+              <div className="report-card-grid">
+                {report.additional.map((item) => (
+                  <FindingCard key={item.id} finding={item} />
+                ))}
+              </div>
+            </details>
           </section>
         )}
         <Checklist report={report} />
         <section className="report-section report-original">
           <details>
-            <summary>원본 응답과 해석 안내</summary>
+            <summary>전체 17개 응답 보기</summary>
             <div className="report-response-wrap">
               <table>
                 <caption>17문항에서 선택한 응답</caption>

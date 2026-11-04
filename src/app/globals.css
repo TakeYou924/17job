@@ -203,3 +203,568 @@
  .report-notice{margin-top:14px;padding:12px;break-inside:avoid}.report-notice p{font-size:12px;line-height:1.55;margin-top:8px}.report-print-footer{font-size:11px;color:#506075;margin-top:16px}
 }
 @media print{.report-print-flow .report-print-page+.report-print-page{break-before:auto}.report-print h2,.report-print h3,.report-print h4{break-after:avoid}}
+/* UX v2: two independent entry points, report-first results and readable cards. */
+@media screen {
+  :root {
+    --ink: #263b32;
+    --green: #237a55;
+    --muted: #53665b;
+    --bg: #fafbf8;
+  }
+  body {
+    font-size: 16px;
+    color: #263b32;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: #173a2e;
+  }
+  .site-header,
+  .hero,
+  .jobs-section,
+  .flow,
+  footer {
+    max-width: 1216px;
+  }
+  .site-header nav button {
+    font-size: 14px;
+    min-height: 44px;
+  }
+  .header-note {
+    font-size: 13px;
+  }
+  .hero {
+    padding-top: 64px;
+    padding-bottom: 72px;
+  }
+  .hero h1 {
+    font-size: 54px;
+  }
+  .hero-copy > p {
+    font-size: 16px;
+    max-width: 480px;
+    line-height: 1.8;
+    margin-bottom: 28px;
+  }
+  .hero-choices {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .hero-choices > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .hero-choices .large {
+    min-width: 0;
+    font-size: 15px;
+    min-height: 48px;
+    padding: 14px 19px;
+    gap: 12px;
+  }
+  .hero-choices small {
+    font-size: 13px;
+    color: #53665b;
+  }
+  .value-path {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .value-path span {
+    background: #edf3e9;
+    color: #366447;
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  .how-section {
+    grid-template-columns: 260px 1fr;
+    padding-top: 45px;
+    padding-bottom: 45px;
+  }
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .step h3 {
+    font-size: 18px;
+  }
+  .step p {
+    font-size: 15px;
+    color: #53665b;
+  }
+  .step > span {
+    font-size: 13px;
+  }
+  .eyebrow {
+    font-size: 12px;
+    color: #53665b;
+  }
+  .section-heading h1 {
+    font-size: 32px;
+  }
+  .section-heading p {
+    font-size: 16px;
+    color: #53665b;
+  }
+  .section-heading {
+    margin-bottom: 32px;
+  }
+  .job-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .job-card {
+    padding: 28px;
+    background: #fff;
+  }
+  .job-card h3 {
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+  .job-card .card-mission {
+    font-size: 18px;
+    line-height: 1.6;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .job-card > p {
+    font-size: 16px;
+    color: #53665b;
+  }
+  .job-card .tags {
+    margin: 18px 0;
+  }
+  .job-card .tags span {
+    font-size: 13px;
+    color: #53665b;
+    background: #edf3e9;
+  }
+  .pill {
+    font-size: 13px;
+  }
+  .small {
+    font-size: 13px;
+  }
+  .job-card .card-bottom > span:first-child {
+    font-size: 13px;
+    color: #53665b;
+  }
+  .card-bottom .text-button {
+    font-size: 15px;
+    min-height: 44px;
+  }
+  .job-actions-detail {
+    margin: 0 0 20px;
+  }
+  .job-actions-detail summary {
+    font-size: 14px;
+    min-height: 44px;
+    line-height: 44px;
+    color: #237a55;
+  }
+  .job-actions-detail p,
+  .job-actions-detail li {
+    font-size: 14px;
+    color: #53665b;
+  }
+  .job-actions-detail ul {
+    padding-left: 20px;
+    list-style: disc;
+  }
+  .text-button {
+    font-size: 14px;
+    min-height: 44px;
+  }
+  .info-strip {
+    font-size: 15px;
+  }
+  .section-row > div > p {
+    font-size: 15px;
+  }
+  .report-result {
+    max-width: 900px;
+  }
+  .report-result > .interpretation-report {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 840px;
+  }
+  .report-complete-status {
+    display: inline-block;
+    background: #edf3e9;
+    color: #173a2e;
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 14px !important;
+    font-weight: 600;
+  }
+  .report-result .report-metadata {
+    margin-top: 14px;
+  }
+  .independent-experience {
+    max-width: 840px;
+    margin: 32px auto 0;
+    padding: 20px;
+    border-top: 1px solid #dce5d8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .independent-experience p {
+    font-size: 14px;
+    color: #53665b;
+  }
+  .interpretation-report {
+    --report-ink: #263b32;
+    --report-main: #173a2e;
+    --report-muted: #53665b;
+    font-size: 16px;
+  }
+  .interpretation-report h3 {
+    font-size: 22px;
+  }
+  .report-heading > p,
+  .report-finding dd,
+  .report-domain > p,
+  .report-scene-grid li > p,
+  .report-individual-detail > p,
+  .report-checklist li p {
+    font-size: 16px;
+  }
+  .report-card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  .report-finding {
+    background: #edf3e9;
+    padding: 24px;
+  }
+  .report-finding h4 {
+    font-size: 18px;
+  }
+  .report-finding dt,
+  .report-source-label,
+  .report-section-intro,
+  .report-hypothesis,
+  .report-metadata > div {
+    font-size: 14px;
+  }
+  .report-domain h4 {
+    font-size: 18px;
+  }
+  .report-domain-details summary,
+  .report-original summary,
+  .report-evidence summary,
+  .report-scenes-details > summary {
+    font-size: 14px;
+    min-height: 44px;
+    padding: 8px 0;
+    line-height: 28px;
+    color: #237a55;
+  }
+  .report-domain-context {
+    font-size: 15px !important;
+    color: #53665b;
+  }
+  .report-scenes-details {
+    margin-top: 30px;
+    border-top: 1px solid #e2e8e0;
+    padding-top: 12px;
+  }
+  .report-scenes-details > summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .report-caution {
+    background: #f7f0e4;
+  }
+  .report-caution h4 {
+    color: #80571e;
+  }
+  .report-exploration {
+    background: #edf3e9;
+  }
+  .report-exploration h4 {
+    color: #1d625d;
+  }
+  .report-exploration .report-hypothesis {
+    color: #1d625d;
+  }
+  .report-primary {
+    background: #237a55;
+  }
+  .report-secondary {
+    background: #edf3e9;
+    color: #173a2e;
+  }
+  .report-section {
+    margin-top: 44px;
+  }
+  .report-finding dl > div {
+    margin-bottom: 18px;
+  }
+  .report-print-help,
+  .report-notice p {
+    font-size: 13px;
+  }
+  .report-domain-responses li,
+  .report-covered > p {
+    font-size: 14px;
+  }
+  .report-result .report-header {
+    margin-top: 0;
+  }
+  .option {
+    font-size: 16px;
+  }
+  .helper,
+  .textarea-meta {
+    font-size: 13px;
+  }
+  .question-panel h2 {
+    font-size: 24px;
+  }
+  .scenario,
+  .scenario p,
+  .resources,
+  .mission-sidebar > p,
+  .feedback p {
+    font-size: 15px;
+  }
+  .answer-label {
+    font-size: 16px;
+  }
+  textarea {
+    font-size: 16px;
+  }
+  .mission-sidebar li button {
+    font-size: 14px;
+    min-height: 44px;
+  }
+  .save-warning {
+    font-size: 14px;
+  }
+  .completion-banner p {
+    font-size: 15px;
+  }
+  footer,
+  footer button {
+    font-size: 13px;
+  }
+  .gentle-note {
+    font-size: 14px;
+    color: #53665b;
+  }
+  .job-card .muted {
+    color: #53665b;
+  }
+}
+@media screen and (max-width: 1000px) {
+  .hero-choices {
+    flex-direction: column;
+  }
+  .hero h1 {
+    font-size: 44px;
+  }
+  .hero-choices > div {
+    width: 100%;
+    max-width: 340px;
+  }
+}
+@media screen and (max-width: 760px) {
+  .hero h1 {
+    font-size: 36px;
+  }
+  .hero {
+    padding: 40px 20px;
+  }
+  .hero-choices {
+    gap: 18px;
+  }
+  .hero-choices > div {
+    width: 100%;
+    max-width: none;
+  }
+  .hero-choices button {
+    width: 100%;
+  }
+  .hero-choices .large {
+    font-size: 15px;
+    justify-content: space-between;
+  }
+  .hero-copy > p {
+    font-size: 16px;
+  }
+  .site-header {
+    padding: 18px 20px;
+    gap: 16px;
+  }
+  .site-header nav {
+    gap: 18px;
+  }
+  .site-header nav button {
+    font-size: 13px;
+  }
+  .how-section {
+    grid-template-columns: 1fr;
+    padding: 35px 20px;
+  }
+  .steps {
+    grid-template-columns: 1fr;
+  }
+  .flow,
+  .jobs-section {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .job-grid {
+    grid-template-columns: 1fr;
+  }
+  .job-card {
+    padding: 24px;
+  }
+  .job-card h3,
+  .job-card .card-mission {
+    font-size: 17px;
+  }
+  .section-heading h1 {
+    font-size: 27px;
+  }
+  .section-heading p {
+    font-size: 15px;
+  }
+  .interpretation-report {
+    padding: 24px 20px;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .report-card-grid,
+  .report-scene-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .interpretation-report h3 {
+    font-size: 20px;
+  }
+  .report-finding {
+    padding: 20px;
+  }
+  .report-finding dd,
+  .report-domain > p,
+  .report-checklist li p {
+    font-size: 15px;
+  }
+  .report-finding h4,
+  .report-domain h4 {
+    font-size: 17px;
+  }
+  .report-metadata > div {
+    font-size: 13px;
+  }
+  .independent-experience {
+    display: block;
+    padding: 18px 0;
+  }
+  .independent-experience button {
+    margin-top: 12px;
+  }
+  .hero-art {
+    max-width: 100%;
+    overflow: clip;
+  }
+  .question-panel {
+    padding: 23px 18px;
+  }
+  .option {
+    padding: 16px 12px;
+    font-size: 15px;
+  }
+  .report-section {
+    margin-top: 32px;
+  }
+  .mission-sidebar li button {
+    font-size: 0;
+  }
+  .report-response-wrap th,
+  .report-response-wrap td {
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+  .interest-options label {
+    font-size: 14px;
+  }
+}
+@media screen {
+  .job-card-ready {
+    background: #f5f7f2;
+  }
+  .site-header nav button {
+    color: #53665b;
+  }
+  .site-header nav button.active {
+    color: #237a55;
+    box-shadow: inset 0 -2px #237a55;
+  }
+  .hero-badge {
+    font-size: 13px !important;
+  }
+  .job-card .pill {
+    color: #53665b;
+  }
+  .job-card .pill.green {
+    color: #1d625d;
+  }
+  .report-neutral,
+  .report-covered,
+  .report-individual-detail,
+  .report-notice,
+  .report-response-wrap thead {
+    background: #edf3e9;
+  }
+  .gentle-note {
+    padding: 0 20px;
+  }
+  .mission-sidebar li button {
+    overflow-wrap: anywhere;
+  }
+}
+@media print {
+  body:has(.report-print) .independent-experience {
+    display: none !important;
+  }
+}
+@media screen {
+  .hero-copy > p,
+  .step > span,
+  .info-strip,
+  footer,
+  footer button {
+    color: #53665b;
+  }
+  .report-scenes-details > summary:focus-visible {
+    outline: 3px solid #598868;
+    outline-offset: 4px;
+  }
+}
+/* Collapse the hero when its available width shrinks, including browser zoom. */
+@media screen {
+  .hero {grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr))}
+  .hero-copy {min-width:0}
+  .hero-art {min-width:0;width:100%}
+}
+@media screen and (max-width:1100px) {
+  .hero-art {overflow:clip}
+}
+
+@media screen {
+  .report-additional summary {font-size:14px;min-height:44px;line-height:28px;padding:8px 0;color:#237a55;cursor:pointer}
+}
+@media screen and (max-width:480px) {
+  .hero-art .floating-note {display:none}
+  .hero-art {height:340px}
+}

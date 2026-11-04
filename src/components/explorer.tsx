@@ -2,14 +2,12 @@
 import { useEffect, useRef, useState } from "react";
 import questions from "@/data/questions.json";
 import jobs from "@/data/jobs.json";
+import cardContent from "@/data/experience-cards.json";
+import WorkEnvironmentReport from "@/components/report/report-view";
 import exploration from "@/data/exploration.json";
 import { conditionPrompts, focusFor } from "@/lib/exploration";
-import {
-  ConditionResults,
-  ObservationGuide,
-  DiscoveryRecord,
-} from "@/components/exploration";
-import { friction, recommend, type Answer } from "@/lib/analysis";
+import { ObservationGuide, DiscoveryRecord } from "@/components/exploration";
+import { type Answer } from "@/lib/analysis";
 import { localFeedback } from "@/lib/feedback";
 import {
   initialProgress,
@@ -135,11 +133,6 @@ export default function Explorer() {
     setNotice("");
     update({ stage });
   };
-  const prompts = conditionPrompts(
-    questions,
-    s.answers,
-    exploration.conditions,
-  );
   const allAnswered = questions.every((q) => s.answers[q.id]);
   const q = questions[s.question];
   const mission = activeJob.missions[experience.mission];
@@ -189,12 +182,16 @@ export default function Explorer() {
     </div>
   );
   const jobCard = (job: Job) => {
-    const matches = friction(job.environments, s.answers);
+    const copy = cardContent[job.id as keyof typeof cardContent];
     const saved = experienceFor(s, job.id as JobId);
     const done = isComplete(saved);
     const started = saved.responses.some(Boolean);
     return (
-      <article className="job-card" key={job.id} data-job-id={job.id}>
+      <article
+        className={`job-card${job.available ? "" : " job-card-ready"}`}
+        key={job.id}
+        data-job-id={job.id}
+      >
         <div className="card-top">
           <span className={`job-icon ${job.color}`} aria-hidden="true">
             {job.icon}
@@ -209,41 +206,24 @@ export default function Explorer() {
                   : "준비 중"}
           </span>
         </div>
-        <div className="small muted">
-          {job.id === "analyst" ? `관련 직무: ${job.title}` : job.category}
-        </div>
-        <h3>{job.id === "analyst" ? exploration.analyst.title : job.title}</h3>
-        <p>
-          {job.id === "analyst"
-            ? exploration.analyst.description
-            : job.description}
-        </p>
+        <div className="small muted">{job.category}</div>
+        <h3>{job.title}</h3>
+        <h4 className="card-mission">{copy.mission}</h4>
+        <p>{copy.action}</p>
         <div className="tags">
           {job.tasks.map((t) => (
             <span key={t}>{t}</span>
           ))}
         </div>
-        {s.stage !== "home" && (
-          <div className="environment-note">
-            {matches.length
-              ? `살펴볼 부담 환경: ${matches.map((id) => questions[id - 1].title).join(", ")}`
-              : "등록된 대표 업무 환경에서 응답과 겹치는 부담이 없어요."}
-            <details>
-              <summary>업무 환경 살펴보기</summary>
-              {job.environments.map((e) => (
-                <p key={e.question}>
-                  {e.answer === "A"
-                    ? questions[e.question - 1].a
-                    : questions[e.question - 1].b}
-                </p>
-              ))}
-              <p>
-                실제 환경은 조직·역할에 따라 달라요. 부담이 겹치지 않아도
-                적합하다는 뜻은 아니에요.
-              </p>
-            </details>
-          </div>
-        )}
+        <details className="job-actions-detail">
+          <summary>이 직무에서 하는 일 보기</summary>
+          <p>{job.description}</p>
+          <ul>
+            {job.tasks.map((task) => (
+              <li key={task}>{task}</li>
+            ))}
+          </ul>
+        </details>
         <div className="card-bottom">
           <span>◷ {job.duration}</span>
           {job.available ? (
@@ -256,7 +236,7 @@ export default function Explorer() {
               <span aria-hidden="true">↗</span>
             </button>
           ) : (
-            <span className="small muted">곧 만나요</span>
+            <span className="small muted">준비 중</span>
           )}
         </div>
       </article>
@@ -284,17 +264,25 @@ export default function Explorer() {
             className={
               s.stage === "survey" || s.stage === "results" ? "active" : ""
             }
+            aria-current={
+              s.stage === "survey" || s.stage === "results" ? "page" : undefined
+            }
             onClick={() => go(allAnswered ? "results" : "survey")}
           >
-            나의 업무 환경
+            업무 환경 검사
           </button>
           <button
             className={
-              s.stage === "jobs" || s.stage === "mission" ? "active" : ""
+              ["jobs", "mission", "complete"].includes(s.stage) ? "active" : ""
             }
-            onClick={() => go(allAnswered ? "jobs" : "survey")}
+            aria-current={
+              ["jobs", "mission", "complete"].includes(s.stage)
+                ? "page"
+                : undefined
+            }
+            onClick={() => go("jobs")}
           >
-            직무 체험
+            직무체험
           </button>
         </nav>
         <span className="header-note">
@@ -325,30 +313,36 @@ export default function Explorer() {
                   조금 더 선명해져요.
                 </h1>
                 <p>
-                  좋아하는 일을 바로 찾지 못해도 괜찮아요.
-                  <br />
-                  나에게 버거운 환경을 알아보고,
-                  <br className="mobile-only" /> 진짜 업무를 경험하며 탐색해
-                  보세요.
+                  내가 감당하기 어려운 업무 환경을 알아보고, 궁금한 일을 직접
+                  경험해 보세요.
                 </p>
-                <button
-                  className="primary large"
-                  onClick={() => go(allAnswered ? "results" : "survey")}
-                >
-                  {Object.keys(s.answers).length
-                    ? "나의 탐색 이어가기"
-                    : "나의 탐색 시작하기"}{" "}
-                  <span aria-hidden="true">↗</span>
-                </button>
-                <div className="hero-meta">
-                  <span>◷ 설문 약 3분</span>
-                  <span>✓ 가입 없이 무료로</span>
-                  <span>✧ AI API 없이 체험</span>
+                <div className="hero-choices">
+                  <div>
+                    <button
+                      className="primary large"
+                      onClick={() => go(allAnswered ? "results" : "survey")}
+                    >
+                      {allAnswered
+                        ? "내 검사 결과 보기"
+                        : "나의 업무 환경 알아보기"}{" "}
+                      ↗
+                    </button>
+                    <small>17개 질문 · 약 3분</small>
+                  </div>
+                  <div>
+                    <button
+                      className="secondary large"
+                      onClick={() => go("jobs")}
+                    >
+                      직무체험 둘러보기 ↗
+                    </button>
+                    <small>설문 없이도 자유롭게 시작</small>
+                  </div>
                 </div>
               </div>
               <div
                 className="hero-art"
-                aria-label="질문, 경험, 발견으로 이어지는 탐색 과정"
+                aria-label="업무 환경 이해와 직무 경험, 독립된 두 가지 탐색 방법"
               >
                 <div className="orbit orbit-one" />
                 <div className="orbit orbit-two" />
@@ -377,12 +371,9 @@ export default function Explorer() {
                     <br />
                     나의 방향이 보여요.
                   </h2>
-                  <div className="path">
-                    <span>질문</span>
-                    <i />
-                    <span>경험</span>
-                    <i />
-                    <span className="filled">발견 ✦</span>
+                  <div className="value-path">
+                    <span>업무 환경 이해</span>
+                    <span>직무 경험</span>
                   </div>
                 </div>
                 <div className="floating-note note-two">
@@ -400,24 +391,19 @@ export default function Explorer() {
             <section className="how-section">
               <div>
                 <span className="eyebrow">HOW IT WORKS</span>
-                <h2>나를 알아가는 세 번의 작은 걸음</h2>
+                <h2>나를 알아가는 두 가지 방법</h2>
               </div>
               <div className="steps">
                 {[
                   [
-                    "01",
-                    "나의 환경 알아보기",
-                    "17개의 질문으로 오래 감당하기 어려운 업무 환경을 살펴봐요.",
+                    "검사",
+                    "업무 환경 검사",
+                    "17개의 응답을 실제 업무 장면과 연결한 해설지를 확인해요.",
                   ],
                   [
-                    "02",
-                    "직접 경험해 보기",
-                    "실제 상황을 바탕으로 한 작은 미션으로 직무를 경험해요.",
-                  ],
-                  [
-                    "03",
-                    "나의 방향 발견하기",
-                    "해본 뒤의 감정을 돌아보고 다음 탐색으로 이어가요.",
+                    "체험",
+                    "직무체험",
+                    "설문 없이 작은 미션을 시작하고 직접 느낀 점을 기록해요.",
                   ],
                 ].map(([n, t, d]) => (
                   <div className="step" key={n}>
@@ -438,14 +424,16 @@ export default function Explorer() {
                     보세요.
                   </p>
                 </div>
-                <button
-                  className="text-button"
-                  onClick={() => go(allAnswered ? "jobs" : "survey")}
-                >
-                  나의 작은 경험 찾아보기 ↗
+                <button className="text-button" onClick={() => go("jobs")}>
+                  모든 체험 보기 ↗
                 </button>
               </div>
-              <div className="job-grid">{jobs.map(jobCard)}</div>
+              <div className="job-grid">
+                {[
+                  ...jobs.filter((job) => job.available),
+                  ...jobs.filter((job) => !job.available),
+                ].map(jobCard)}
+              </div>
             </section>
             <div className="gentle-note">
               ✳ &nbsp; 이곳에는 당신의 직업을 결정하는 점수가 없어요. 직접
@@ -456,7 +444,7 @@ export default function Explorer() {
         {s.stage === "survey" && (
           <section className="flow narrow">
             {heading(
-              "STEP 01 · 나의 업무 환경",
+              "업무 환경 검사",
               "어느 쪽이 더 버거울까요?",
               "좋아하는 쪽이 아니라, 장기간 감당하기 더 어려운 환경을 골라 주세요.",
             )}
@@ -542,32 +530,35 @@ export default function Explorer() {
           </section>
         )}
         {s.stage === "results" && (
-          <section className="flow">
+          <section className="flow report-result">
             {heading(
-              "STEP 01 · 나의 업무 환경",
-              "나의 업무 환경 요약",
-              "내가 고른 조건과 다음 행동을 간단히 정리했어요.",
+              "업무 환경 검사 결과",
+              "내가 일할 때 확인할 조건",
+              "17개 응답에서 확인된 업무 환경을 실제 일하는 상황과 연결해 정리했어요.",
             )}
-            <ConditionResults
-              prompts={prompts}
+            <WorkEnvironmentReport
               answers={s.answers}
               completedAt={s.completedAt}
               onEdit={() => {
                 update({ question: 0 });
                 go("survey");
               }}
-              onStart={() => openJob("analyst")}
-              onBrowse={() => go("jobs")}
-              savedFocus={experienceFor(s, "analyst").explorationFocus}
+              compactHeader
             />
+            <aside className="independent-experience">
+              <p>직무체험은 검사와 별도로 이용할 수 있어요.</p>
+              <button className="text-button" onClick={() => go("jobs")}>
+                직무체험 둘러보기 →
+              </button>
+            </aside>
           </section>
         )}
         {s.stage === "jobs" && (
           <section className="flow">
             {heading(
-              "STEP 02 · 직무 체험",
-              "작은 경험으로 알아보세요.",
-              "다섯 가지 직무를 비교해 보세요. 부담 환경이 겹쳐도 체험을 제한하지 않습니다.",
+              "직무체험",
+              "궁금한 일을 직접 경험해 보세요.",
+              "직무마다 어떤 일을 하는지 살펴보고, 관심 있는 체험을 선택하세요.",
             )}
             <div className="info-strip">
               서비스 기획자와 데이터 분석가의 <b>4단계 미션</b>을 체험할 수
@@ -575,12 +566,17 @@ export default function Explorer() {
               회고는 따로 보관됩니다. 자료와 상황은 체험용 예시입니다.
             </div>
             <ExperienceHistory state={s} onOpen={openJob} />
-            <div className="job-grid">{jobs.map(jobCard)}</div>
+            <div className="job-grid">
+              {[
+                ...jobs.filter((job) => job.available),
+                ...jobs.filter((job) => !job.available),
+              ].map(jobCard)}
+            </div>
             <button
               className="text-button back-link"
-              onClick={() => go("results")}
+              onClick={() => go(allAnswered ? "results" : "survey")}
             >
-              ← 업무 환경 분석 다시 보기
+              {allAnswered ? "내 검사 결과 보기" : "업무 환경 검사 알아보기"}
             </button>
           </section>
         )}
@@ -780,7 +776,7 @@ export default function Explorer() {
         {s.stage === "complete" && (
           <section className="flow">
             {heading(
-              "STEP 03 · 나의 발견",
+              "체험 회고 · 나의 발견",
               "한 가지 일을 경험했어요!",
               "잘했는지보다, 해보니 어땠는지 돌아볼 시간이에요.",
             )}
@@ -877,12 +873,11 @@ export default function Explorer() {
                   {experience.interest !== null && experience.interest >= 4
                     ? "이번에 느낀 흥미를 다른 역할에서도 살펴보세요."
                     : "다른 업무 방식과 비교하며 나만의 기준을 찾아보세요."}{" "}
-                  아래 순서는 등록된 대표 환경과 부담 응답이 적게 겹치는
-                  후보부터이며, 적합도 순위가 아닙니다. 체험 가능한 후보는 바로
+                  궁금한 체험을 자유롭게 골라 비교해 보세요. 체험 가능한 후보는
                   시작하거나 기록을 이어갈 수 있고, 나머지 직무는 준비 중입니다.
                 </p>
                 <div className="job-grid">
-                  {recommend(jobs, s.answers, s.activeJob).map(jobCard)}
+                  {jobs.filter((job) => job.id !== s.activeJob).map(jobCard)}
                 </div>
               </section>
             )}

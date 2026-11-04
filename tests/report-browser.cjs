@@ -224,7 +224,7 @@ const fixtures = [
     });
     await app.goto(base);
     await app
-      .getByRole("heading", { name: "나의 업무 환경 요약", exact: true })
+      .getByRole("heading", { name: "내가 일할 때 확인할 조건", exact: true })
       .waitFor();
     assert.equal(
       await app
@@ -235,7 +235,7 @@ const fixtures = [
     await app.getByRole("button", { name: "응답 수정", exact: true }).click();
     await app.getByRole("radio").nth(0).check();
     await app
-      .getByRole("button", { name: "나의 업무 환경", exact: true })
+      .getByRole("button", { name: "업무 환경 검사", exact: true })
       .click();
     assert.equal(
       await app
@@ -250,7 +250,7 @@ const fixtures = [
     );
     await app.reload();
     await app
-      .getByRole("heading", { name: "나의 업무 환경 요약", exact: true })
+      .getByRole("heading", { name: "내가 일할 때 확인할 조건", exact: true })
       .waitFor();
     assert.equal(
       await app

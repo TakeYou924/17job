@@ -284,9 +284,51 @@ async function finishJob(page, id, rating) {
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(baseURL);
-    await page.getByRole("button", { name: "나의 탐색 시작하기" }).waitFor();
+    await page
+      .getByRole("button", { name: "나의 업무 환경 알아보기" })
+      .waitFor();
     await page.screenshot({ path: "/tmp/17job-desktop.png", fullPage: true });
-    await page.getByRole("button", { name: "나의 탐색 시작하기" }).click();
+    await page
+      .getByRole("button", { name: "직무체험 둘러보기", exact: false })
+      .click();
+    await page
+      .getByRole("heading", {
+        name: "궁금한 일을 직접 경험해 보세요.",
+        exact: true,
+      })
+      .waitFor();
+    assert.deepEqual(
+      await page
+        .locator(".job-card")
+        .evaluateAll((cards) => cards.map((card) => card.dataset.jobId)),
+      ["planner", "analyst", "designer", "marketer", "operator"],
+    );
+    await cardOpen(page, "analyst");
+    await page.locator("#mission-answer").fill("설문 없이 시작한 분석 초안");
+    await page.reload();
+    await page.locator("#mission-answer").waitFor();
+    assert.equal(
+      await page.locator("#mission-answer").inputValue(),
+      "설문 없이 시작한 분석 초안",
+    );
+    assert.deepEqual(
+      await page.evaluate(
+        () => JSON.parse(localStorage.getItem("17job:v1")).answers,
+      ),
+      {},
+    );
+    await page.getByRole("button", { name: "직무 목록", exact: false }).click();
+    assert.equal(
+      await page
+        .getByRole("button", { name: "내 검사 결과 보기", exact: true })
+        .count(),
+      0,
+    );
+    await page.getByRole("button", { name: "내 기록 초기화" }).click();
+    await page
+      .getByRole("button", { name: "전체 초기화", exact: true })
+      .click();
+    await page.getByRole("button", { name: "나의 업무 환경 알아보기" }).click();
     assert.equal(
       await page.getByRole("button", { name: "다음 질문" }).isDisabled(),
       true,
@@ -301,39 +343,31 @@ async function finishJob(page, id, rating) {
         .click();
     }
     await page
-      .getByRole("heading", { name: "나의 업무 환경 요약", exact: true })
+      .getByRole("heading", { name: "내가 일할 때 확인할 조건", exact: true })
       .waitFor();
-    assert.equal(await page.locator(".condition-tags li").count(), 3);
+    assert.equal(await page.locator(".condition-tags li").count(), 0);
     assert.equal(
-      await page.locator(".report-web .report-heading h2").innerText(),
-      "나의 업무 환경 탐색 결과",
+      await page.locator(".report-complete-status").innerText(),
+      "17문항 응답 완료",
+    );
+    assert.equal(
+      await page
+        .locator(".report-web .report-highlights .report-finding")
+        .count(),
+      3,
+    );
+    assert.equal(await page.locator(".report-web .report-domain").count(), 5);
+    assert.equal(
+      await page
+        .locator(".report-web .report-original details")
+        .getAttribute("open"),
+      null,
     );
     const completedAt = await page.evaluate(
       () => JSON.parse(localStorage.getItem("17job:v1")).completedAt,
     );
     assert.equal(typeof completedAt, "string");
     assert.ok(Number.isFinite(Date.parse(completedAt)));
-    const sectionOrder = await page
-      .locator(".result-sheet")
-      .evaluate((element) => {
-        const tags = element.querySelector(".condition-tags"),
-          report = element.querySelector(".interpretation-report");
-        return !!(
-          tags.compareDocumentPosition(report) &
-          Node.DOCUMENT_POSITION_FOLLOWING
-        );
-      });
-    assert.equal(sectionOrder, true);
-
-    const guidance = require("../src/data/exploration.json");
-    assert.deepEqual(
-      await page.locator(".condition-tags li").allTextContents(),
-      [
-        guidance.conditions[0].A.shortLabel,
-        guidance.conditions[1].B.shortLabel,
-        guidance.conditions[3].B.shortLabel,
-      ],
-    );
     assert.equal(
       await page
         .locator(".quick-checks,.full-responses,.result-explanations")
@@ -351,7 +385,7 @@ async function finishJob(page, id, rating) {
     );
     await page.reload();
     await page
-      .getByRole("heading", { name: "나의 업무 환경 요약", exact: true })
+      .getByRole("heading", { name: "내가 일할 때 확인할 조건", exact: true })
       .waitFor();
     await page.screenshot({
       path: "/tmp/17job-conditions-desktop.png",
@@ -364,9 +398,7 @@ async function finishJob(page, id, rating) {
       fullPage: true,
     });
     await page.setViewportSize({ width: 1440, height: 1000 });
-    await page
-      .getByRole("button", { name: "다른 경험도 둘러보기", exact: false })
-      .click();
+    await page.getByRole("button", { name: "직무체험", exact: true }).click();
     assert.equal(await page.locator(".job-card").count(), 5);
     for (const id of ["designer", "marketer", "operator"]) {
       const card = page.locator(".job-card").filter({
@@ -375,12 +407,7 @@ async function finishJob(page, id, rating) {
       assert.equal(await card.getByRole("button").count(), 0);
       assert.ok((await card.innerText()).includes("준비 중"));
     }
-    await page
-      .getByRole("button", { name: "나의 업무 환경", exact: true })
-      .click();
-    await page
-      .getByRole("button", { name: "이 상황을 직접 확인해 보기", exact: false })
-      .click();
+    await cardOpen(page, "analyst");
     await page
       .getByRole("heading", { name: "이번에 확인할 나의 질문", exact: true })
       .waitFor();
@@ -414,17 +441,8 @@ async function finishJob(page, id, rating) {
     });
     await page.setViewportSize({ width: 1440, height: 1000 });
     await finishJob(page, "analyst", 3);
-    await page
-      .getByRole("button", { name: "나의 업무 환경", exact: true })
-      .click();
-    assert.ok(
-      (await page.locator(".saved-focus-note").innerText()).includes(
-        "확실하지",
-      ),
-    );
-    await page
-      .getByRole("button", { name: "이 상황을 직접 확인해 보기", exact: false })
-      .click();
+    await page.getByRole("button", { name: "직무체험", exact: true }).click();
+    await cardOpen(page, "analyst");
     assert.ok(
       (await page.locator(".discovery-question").innerText()).includes(
         "확실하지",
@@ -445,14 +463,14 @@ async function finishJob(page, id, rating) {
       .getByRole("heading", { name: "사용자의 목소리 듣기", exact: true })
       .waitFor();
 
-    await page.getByRole("button", { name: "직무 체험", exact: true }).click();
+    await page.getByRole("button", { name: "직무체험", exact: true }).click();
     await cardOpen(page, "planner");
     assert.equal(
       await page.locator("#mission-answer").inputValue(),
       responses.planner,
     );
     await finishJob(page, "planner", 4);
-    await page.getByRole("button", { name: "직무 체험", exact: true }).click();
+    await page.getByRole("button", { name: "직무체험", exact: true }).click();
     await page.getByRole("heading", { name: "나의 탐색 기록" }).waitFor();
     assert.equal(await page.locator(".experience-history li").count(), 2);
     assert.ok(
@@ -521,10 +539,12 @@ async function finishJob(page, id, rating) {
     await page
       .getByRole("button", { name: "전체 초기화", exact: true })
       .click();
-    await page.getByRole("button", { name: "나의 탐색 시작하기" }).waitFor();
+    await page
+      .getByRole("button", { name: "나의 업무 환경 알아보기" })
+      .waitFor();
     await noOverflow(page);
     await page.screenshot({ path: "/tmp/17job-mobile.png", fullPage: true });
-    await page.getByRole("button", { name: "나의 탐색 시작하기" }).click();
+    await page.getByRole("button", { name: "나의 업무 환경 알아보기" }).click();
     await page.getByRole("radio").nth(2).check();
     await noOverflow(page);
     await page.screenshot({
@@ -605,24 +625,25 @@ async function finishJob(page, id, rating) {
       }, value);
       await edge.goto(baseURL);
       await edge
-        .getByRole("heading", { name: "나의 업무 환경 요약", exact: true })
+        .getByRole("heading", { name: "내가 일할 때 확인할 조건", exact: true })
         .waitFor();
       await noOverflow(edge);
       if (variant === "neutral") {
         await edge
           .getByRole("heading", {
-            name: "특정한 부담은 아직 드러나지 않았어요.",
+            name: "이번 설문에서는 뚜렷한 부담 조건이 확인되지 않았습니다.",
             exact: true,
           })
           .waitFor();
         assert.equal(await edge.locator(".condition-list li").count(), 0);
         assert.equal(await edge.locator(".condition-tags li").count(), 0);
       } else {
-        assert.equal(await edge.locator(".condition-tags li").count(), 17);
-        const guidance = require("../src/data/exploration.json");
-        assert.deepEqual(
-          await edge.locator(".condition-tags li").allTextContents(),
-          guidance.conditions.map((row) => row.B.shortLabel),
+        assert.equal(await edge.locator(".condition-tags li").count(), 0);
+        assert.equal(
+          await edge
+            .locator(".report-web .report-highlights .report-finding")
+            .count(),
+          3,
         );
         await noOverflow(edge);
 
@@ -636,12 +657,8 @@ async function finishJob(page, id, rating) {
           0,
         );
       }
-      await edge
-        .getByRole("button", {
-          name: "이 상황을 직접 확인해 보기",
-          exact: false,
-        })
-        .click();
+      await edge.getByRole("button", { name: "직무체험", exact: true }).click();
+      await cardOpen(edge, "analyst");
       await edge
         .getByRole("heading", { name: "이번에 확인할 나의 질문", exact: true })
         .waitFor();
@@ -677,7 +694,9 @@ async function finishJob(page, id, rating) {
     });
     await blocked.goto(baseURL);
     await blocked.locator(".save-warning").waitFor();
-    await blocked.getByRole("button", { name: "나의 탐색 시작하기" }).click();
+    await blocked
+      .getByRole("button", { name: "나의 업무 환경 알아보기" })
+      .click();
     await blocked.getByRole("radio").nth(2).check();
     assert.equal(
       await blocked.getByRole("button", { name: "다음 질문" }).isDisabled(),
@@ -687,7 +706,7 @@ async function finishJob(page, id, rating) {
     if (baseURL.startsWith("file:") || process.env.PREVIEW_STANDALONE === "1")
       assert.deepEqual(networkRequests, []);
     console.log(
-      "PASS: 17 questions; planner regression and new analyst / 8 missions; job switching and isolated drafts; ratings and reflections; conditions-to-question direct start; self-reported discoveries; CSV/TXT downloads; next-action draft preservation; neutral/unobservable/17-burden cases; history; invalidation isolation; v1 migration; reload persistence; reset; mobile overflow; storage blocked; no browser errors",
+      "PASS: 17 questions; planner regression and new analyst / 8 missions; job switching and isolated drafts; ratings and reflections; independent no-survey entry and reload; report-first evidence; self-reported discoveries; CSV/TXT downloads; next-action draft preservation; neutral/unobservable/17-burden cases; history; invalidation isolation; v1 migration; reload persistence; reset; mobile overflow; storage blocked; no browser errors",
     );
   } finally {
     await browser.close();

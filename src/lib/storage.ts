@@ -12,7 +12,12 @@ export const JOB_IDS = [
 ] as const;
 export type JobId = (typeof JOB_IDS)[number];
 export type Stage =
-  "home" | "survey" | "results" | "jobs" | "mission" | "complete";
+  | "home"
+  | "survey"
+  | "results"
+  | "jobs"
+  | "mission"
+  | "complete";
 export type Experience = {
   mission: number;
   responses: string[];
@@ -109,12 +114,7 @@ export function selectJob(state: Progress, id: JobId): Progress {
       id,
     ),
     activeJob: id,
-    stage:
-      Object.keys(state.answers).length !== 17
-        ? "survey"
-        : isComplete(e)
-          ? "complete"
-          : "mission",
+    stage: isComplete(e) ? "complete" : "mission",
   };
 }
 export function chooseOption(state: Progress, choice: string): Progress {
@@ -337,10 +337,7 @@ export function parseProgress(raw: string | null): Progress {
         experiences,
       };
     }
-    if (
-      ["results", "jobs", "mission", "complete"].includes(state.stage) &&
-      Object.keys(state.answers).length !== 17
-    )
+    if (state.stage === "results" && Object.keys(state.answers).length !== 17)
       state.stage = "survey";
     if (state.stage === "complete" && !isComplete(experienceFor(state)))
       state.stage = "mission";

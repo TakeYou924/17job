@@ -208,7 +208,7 @@ test("editing invalidates only that job from that step and retains other reflect
   assert.deepEqual(experienceFor(edited, "analyst"), completed);
   assert.deepEqual(experienceFor(state).feedback, completed.feedback);
 });
-test("completed card opens its reflection; missing survey gates experience", () => {
+test("experience and reflection are independent of survey; results still require answers", () => {
   let state: Progress = {
     ...structuredClone(initialProgress),
     answers,
@@ -216,9 +216,23 @@ test("completed card opens its reflection; missing survey gates experience", () 
   };
   assert.equal(selectJob(state, "analyst").stage, "complete");
   state = { ...state, answers: {} };
-  assert.equal(selectJob(state, "analyst").stage, "survey");
+  assert.equal(selectJob(state, "analyst").stage, "complete");
+  assert.equal(
+    selectJob(structuredClone(initialProgress), "analyst").stage,
+    "mission",
+  );
+  assert.equal(
+    parseProgress(
+      JSON.stringify(selectJob(structuredClone(initialProgress), "analyst")),
+    ).stage,
+    "mission",
+  );
   assert.equal(
     parseProgress(JSON.stringify({ ...state, stage: "jobs" })).stage,
+    "jobs",
+  );
+  assert.equal(
+    parseProgress(JSON.stringify({ ...state, stage: "results" })).stage,
     "survey",
   );
 });
@@ -354,8 +368,9 @@ const explorationData = JSON.parse(
     "utf8",
   ),
 );
-const { conditionPrompts, focusFor, toggleFeeling } =
-  await import("../src/lib/exploration.ts");
+const { conditionPrompts, focusFor, toggleFeeling } = await import(
+  "../src/lib/exploration.ts"
+);
 test("every A/B burden produces a practical check and open question, never the unchosen side", () => {
   assert.equal(explorationData.conditions.length, 17);
   for (const answer of ["A", "B"] as const) {

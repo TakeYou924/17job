@@ -1,13 +1,9 @@
 "use client";
 import content from "@/data/exploration.json";
-import WorkEnvironmentReport from "@/components/report/report-view";
-import questions from "@/data/questions.json";
-import type { Answers } from "@/lib/analysis";
 import {
   toggleFeeling,
   type ExplorationFocus,
   type Feeling,
-  type conditionPrompts,
 } from "@/lib/exploration";
 import { switchNextAction, type Experience } from "@/lib/storage";
 const feelingLabels: { id: Feeling; label: string }[] = [
@@ -15,95 +11,6 @@ const feelingLabels: { id: Feeling; label: string }[] = [
   { id: "burdensome", label: "버거웠어요" },
   { id: "unclear", label: "아직 모르겠어요" },
 ];
-export function ConditionResults({
-  prompts,
-  onStart,
-  onBrowse,
-  savedFocus,
-  answers,
-  completedAt,
-  onEdit,
-}: {
-  prompts: ReturnType<typeof conditionPrompts>;
-  onStart: () => void;
-  onBrowse: () => void;
-  savedFocus: ExplorationFocus | null;
-  answers: Answers;
-  completedAt: string | null;
-  onEdit: () => void;
-}) {
-  const bothCount = questions.filter(
-    (question) => answers[question.id] === "both",
-  ).length;
-  return (
-    <section
-      className="panel result-sheet"
-      aria-labelledby="conditions-heading"
-    >
-      <div className="sheet-heading">
-        <span className="eyebrow">MY WORK CONDITIONS</span>
-        <h2 id="conditions-heading">내가 일할 때 확인할 조건</h2>
-        <p className="sheet-counts">
-          부담으로 표시 {prompts.length}개 <span aria-hidden="true">·</span> 둘
-          다 문제 없음 {bothCount}개
-        </p>
-      </div>
-      <div className="sheet-section">
-        <h3>부담으로 표시한 환경</h3>
-        {prompts.length ? (
-          <>
-            <ul className="condition-tags">
-              {prompts.map((prompt) => (
-                <li key={prompt.id}>{prompt.shortLabel}</li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <div className="sheet-neutral">
-            <h3>특정한 부담은 아직 드러나지 않았어요.</h3>
-            <p>
-              모두 ‘둘 다 문제 없음’으로 답했어요. 선호나 능력이 확인된 것은
-              아니에요.
-            </p>
-          </div>
-        )}
-      </div>
-      <WorkEnvironmentReport
-        answers={answers}
-        completedAt={completedAt}
-        onEdit={onEdit}
-      />
-      <div className="sheet-section sheet-next">
-        <div>
-          <span className="eyebrow">다음 한 걸음</span>
-          <h3>{content.analyst.title}</h3>
-          <p>
-            표를 읽고, 원인이 아직 확실하지 않을 때 어떻게 느끼는지 살펴보세요.
-          </p>
-          <span className="small muted">{content.analyst.duration}</span>
-        </div>
-        <button className="primary" onClick={onStart}>
-          이 상황을 직접 확인해 보기 →
-        </button>
-      </div>
-      {savedFocus && (
-        <div className="saved-focus-note">
-          <b>이어서 볼 체험의 질문</b>
-          <p>{savedFocus.question}</p>
-          <small>이미 시작한 질문과 답변은 유지됩니다.</small>
-        </div>
-      )}
-      <p className="sheet-footnote">
-        표시한 응답을 요약한 결과예요. 직무 적합도나 부담의 심각도를 판단한 것은
-        아닙니다.
-      </p>
-      <button className="text-button sheet-browse" onClick={onBrowse}>
-        다른 경험도 둘러보기 →
-      </button>
-    </section>
-  );
-}
-
 export function ObservationGuide({
   focus,
   mission,
