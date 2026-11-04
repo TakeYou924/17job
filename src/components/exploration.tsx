@@ -1,5 +1,6 @@
 "use client";
 import content from "@/data/exploration.json";
+import WorkEnvironmentReport from "@/components/report/report-view";
 import questions from "@/data/questions.json";
 import type { Answers } from "@/lib/analysis";
 import {
@@ -20,12 +21,16 @@ export function ConditionResults({
   onBrowse,
   savedFocus,
   answers,
+  completedAt,
+  onEdit,
 }: {
   prompts: ReturnType<typeof conditionPrompts>;
   onStart: () => void;
   onBrowse: () => void;
   savedFocus: ExplorationFocus | null;
   answers: Answers;
+  completedAt: string | null;
+  onEdit: () => void;
 }) {
   const bothCount = questions.filter(
     (question) => answers[question.id] === "both",
@@ -63,6 +68,11 @@ export function ConditionResults({
           </div>
         )}
       </div>
+      <WorkEnvironmentReport
+        answers={answers}
+        completedAt={completedAt}
+        onEdit={onEdit}
+      />
       <div className="sheet-section sheet-next">
         <div>
           <span className="eyebrow">다음 한 걸음</span>

@@ -304,6 +304,27 @@ async function finishJob(page, id, rating) {
       .getByRole("heading", { name: "나의 업무 환경 요약", exact: true })
       .waitFor();
     assert.equal(await page.locator(".condition-tags li").count(), 3);
+    assert.equal(
+      await page.locator(".report-web .report-heading h2").innerText(),
+      "나의 업무 환경 탐색 결과",
+    );
+    const completedAt = await page.evaluate(
+      () => JSON.parse(localStorage.getItem("17job:v1")).completedAt,
+    );
+    assert.equal(typeof completedAt, "string");
+    assert.ok(Number.isFinite(Date.parse(completedAt)));
+    const sectionOrder = await page
+      .locator(".result-sheet")
+      .evaluate((element) => {
+        const tags = element.querySelector(".condition-tags"),
+          report = element.querySelector(".interpretation-report");
+        return !!(
+          tags.compareDocumentPosition(report) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+        );
+      });
+    assert.equal(sectionOrder, true);
+
     const guidance = require("../src/data/exploration.json");
     assert.deepEqual(
       await page.locator(".condition-tags li").allTextContents(),

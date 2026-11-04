@@ -85,3 +85,12 @@ npm run test:e2e
 재생성: `npm run preview:file`. 이 명령은 Next.js 빌드 후 같은 Explorer 컴포넌트를 단일 HTML로 묶습니다. 서버 기능을 추가할 경우 이 미리보기에도 적용 가능한지 다시 확인해야 합니다.
 
 관리형 브라우저가 file URL을 차단하면 로컬 HTTP로 검증할 수 있습니다. `python -m http.server 3200 --bind 127.0.0.1 --directory preview`로 시작하고, 별도 터미널에서 `CHROMIUM_PATH=/usr/bin/chromium PREVIEW_STANDALONE=1 BASE_URL=http://127.0.0.1:3200/17job-test.html npm run test:e2e`를 실행합니다. 이 주소는 내부 검증용이며 공유 가능한 공개 링크는 아닙니다.
+
+
+## 개인화 업무환경 해설지 v4
+
+‘부담으로 표시한 환경’ 바로 아래에 선택 근거가 있는 해설지를 제공합니다. 34개 A/B 해설, 5개 영역, P01~P05 조합을 사용하며 최대 세 핵심 카드와 업무 장면, 직장 선택 체크리스트, 원본 응답·인쇄/PDF를 제공합니다. 전체 C에서는 특정 부담·선호·강점을 생성하지 않습니다. 원본 17문항과 기존 직무체험은 유지했습니다.
+
+데이터·선정 규칙·개발자 미리보기·인쇄 설명은 [해설지 구현 문서](docs/report-v4.md)를 참고하세요. `npm test`는 기존 테스트 25개와 해설 규칙 테스트 12개를 실행합니다. `npm run test:report:e2e`는 개발 미리보기 서버의 세 샘플·반응형·PDF·키보드를 검증합니다.
+
+가상 응답 PDF 예시: [전체 C](preview/report-samples/sample-1.pdf) · [반복·변화·재량·책임](preview/report-samples/sample-2.pdf) · [소득·시간·의미·성장](preview/report-samples/sample-3.pdf).

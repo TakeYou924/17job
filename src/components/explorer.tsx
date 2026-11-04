@@ -493,6 +493,11 @@ export default function Explorer() {
                       onChange={() =>
                         update({
                           answers: { ...s.answers, [q.id]: value },
+                          completedAt:
+                            Object.keys({ ...s.answers, [q.id]: value })
+                              .length === questions.length
+                              ? new Date().toISOString()
+                              : null,
                           focusQuestionId:
                             s.focusQuestionId === q.id
                               ? null
@@ -546,21 +551,15 @@ export default function Explorer() {
             <ConditionResults
               prompts={prompts}
               answers={s.answers}
+              completedAt={s.completedAt}
+              onEdit={() => {
+                update({ question: 0 });
+                go("survey");
+              }}
               onStart={() => openJob("analyst")}
               onBrowse={() => go("jobs")}
               savedFocus={experienceFor(s, "analyst").explorationFocus}
             />
-            <div className="actions">
-              <button
-                className="secondary"
-                onClick={() => {
-                  update({ question: 0 });
-                  go("survey");
-                }}
-              >
-                응답 수정
-              </button>
-            </div>
           </section>
         )}
         {s.stage === "jobs" && (

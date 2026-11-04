@@ -30,6 +30,7 @@ export type Experience = {
 };
 export type Progress = {
   version: 2;
+  completedAt: string | null;
   stage: Stage;
   answers: Answers;
   question: number;
@@ -56,6 +57,7 @@ export function newExperience(): Experience {
 }
 export const initialProgress: Progress = {
   version: 2,
+  completedAt: null,
   stage: "home",
   answers: {},
   question: 0,
@@ -290,6 +292,11 @@ export function parseProgress(raw: string | null): Progress {
       if (!validExperience(value)) return structuredClone(initialProgress);
       state = {
         version: 2,
+        completedAt:
+          typeof value.completedAt === "string" &&
+          Number.isFinite(new Date(value.completedAt).getTime())
+            ? value.completedAt
+            : null,
         stage: value.stage as Stage,
         answers: value.answers as Answers,
         question: Number(value.question),
@@ -312,6 +319,11 @@ export function parseProgress(raw: string | null): Progress {
       }
       state = {
         version: 2,
+        completedAt:
+          typeof value.completedAt === "string" &&
+          Number.isFinite(new Date(value.completedAt).getTime())
+            ? value.completedAt
+            : null,
         stage: value.stage as Stage,
         answers: value.answers as Answers,
         question: Number(value.question),
