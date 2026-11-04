@@ -340,8 +340,142 @@ test("already-saved records without choice fields retain their original work", (
   assert.equal(migrated.stage, "complete");
 });
 
-test('short reasoning is accepted with an explicit request for evidence',async()=>{
-  const result=await localFeedback.evaluate(jobs[1].missions[2],'ㅇㅇ','A');
-  assert.ok(result.observation.includes('인과관계가 확정되지는'));
-  assert.ok(result.next.includes('근거가 짧아'));
+test("short reasoning is accepted with an explicit request for evidence", async () => {
+  const result = await localFeedback.evaluate(jobs[1].missions[2], "ㅇㅇ", "A");
+  assert.ok(result.observation.includes("인과관계가 확정되지는"));
+  assert.ok(result.next.includes("근거가 짧아"));
+});
+
+const explorationData = JSON.parse(
+  readFileSync(
+    new URL("../src/data/exploration.json", import.meta.url),
+    "utf8",
+  ),
+);
+const { conditionPrompts, focusFor, toggleFeeling } =
+  await import("../src/lib/exploration.ts");
+test("every A/B burden produces a practical check and open question, never the unchosen side", () => {
+  assert.equal(explorationData.conditions.length, 17);
+  for (const answer of ["A", "B"] as const) {
+    const answers: Answers = Object.fromEntries(
+      questions.map((q: { id: number }) => [q.id, answer]),
+    );
+    const result = conditionPrompts(
+      questions,
+      answers,
+      explorationData.conditions,
+    );
+    assert.equal(result.length, 17);
+    for (const prompt of result) {
+      assert.equal(
+        prompt.environment,
+        answer === "A"
+          ? questions[prompt.id - 1].a
+          : questions[prompt.id - 1].b,
+      );
+      assert.ok(prompt.check.length > 5 && prompt.question.endsWith("요?"));
+    }
+  }
+  assert.deepEqual(
+    conditionPrompts(questions, answers, explorationData.conditions),
+    [],
+  );
+});
+test("selected uncertainty question becomes a scoped observation, not a job recommendation", () => {
+  const prompts = conditionPrompts(
+    questions,
+    { 4: "B" },
+    explorationData.conditions,
+  );
+  const focus = focusFor(prompts, 4, explorationData.analyst);
+  assert.equal(focus.sourceQuestionId, 4);
+  assert.ok(focus.question.includes("확실하지"));
+  assert.equal(focus.condition, questions[3].b);
+});
+test("unobservable physical condition and all-both get an honest neutral trial question", () => {
+  const prompts = conditionPrompts(
+    questions,
+    { 1: "A" },
+    explorationData.conditions,
+  );
+  const focus = focusFor(prompts, 1, explorationData.analyst);
+  assert.equal(focus.question, explorationData.analyst.defaultQuestion);
+  assert.ok(focus.scope.includes("직접 확인하기 어렵"));
+  const neutral = focusFor([], null, explorationData.analyst);
+  assert.equal(neutral.sourceQuestionId, null);
+  assert.equal(neutral.question, explorationData.analyst.defaultQuestion);
+});
+test("a process can be interesting and burdensome; unknown is explicit and exclusive", () => {
+  assert.deepEqual(toggleFeeling(["interesting"], "burdensome"), [
+    "interesting",
+    "burdensome",
+  ]);
+  assert.deepEqual(toggleFeeling(["interesting", "burdensome"], "unclear"), [
+    "unclear",
+  ]);
+  assert.deepEqual(toggleFeeling(["unclear"], "interesting"), ["interesting"]);
+  assert.deepEqual(toggleFeeling(["interesting"], "interesting"), []);
+});
+test("focus snapshot, observations and an explicit next-action record survive reload and job switching", () => {
+  let state: Progress = {
+    ...structuredClone(initialProgress),
+    answers,
+    focusQuestionId: 4,
+  };
+  state = selectJob(state, "analyst");
+  const explorationFocus = focusFor(
+    conditionPrompts(questions, { 4: "B" }, explorationData.conditions),
+    4,
+    explorationData.analyst,
+  );
+  state = updateExperience(state, {
+    explorationFocus,
+    observations: {
+      numbers: ["interesting", "burdensome"],
+      uncertainty: ["unclear"],
+    },
+    nextActionId: "spreadsheet",
+    nextActionNote: "계산 열을 만들어 봤어요",
+    nextActionDone: true,
+  });
+  state = selectJob(state, "planner");
+  const loaded = parseProgress(JSON.stringify(state));
+  assert.deepEqual(loaded, state);
+  assert.deepEqual(experienceFor(loaded, "analyst").observations.numbers, [
+    "interesting",
+    "burdensome",
+  ]);
+  assert.equal(experienceFor(loaded, "analyst").nextActionDone, true);
+  assert.equal(experienceFor(loaded, "planner").explorationFocus, null);
+});
+test("old v2 records lacking discovery fields retain answers with empty discovery defaults", () => {
+  const {
+    explorationFocus: _f,
+    observations: _o,
+    nextActionId: _i,
+    nextActionNote: _n,
+    nextActionDone: _d,
+    ...old
+  } = completed;
+  const state = {
+    version: 2,
+    stage: "complete",
+    answers,
+    question: 16,
+    activeJob: "analyst",
+    experiences: { analyst: old },
+  };
+  const loaded = parseProgress(JSON.stringify(state));
+  assert.equal(loaded.stage, "complete");
+  assert.deepEqual(experienceFor(loaded).responses, completed.responses);
+  assert.deepEqual(experienceFor(loaded).observations, {});
+  assert.equal(experienceFor(loaded).nextActionId, null);
+});
+test("downloadable follow-up CSV matches scenario data", () => {
+  const csv = readFileSync(
+    new URL("../public/practice/checkout-devices.csv", import.meta.url),
+    "utf8",
+  );
+  assert.ok(csv.includes("PC,600,450"));
+  assert.ok(csv.includes("Mobile,1800,750"));
 });

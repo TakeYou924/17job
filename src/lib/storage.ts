@@ -1,4 +1,5 @@
 import type { Answers } from "./analysis.ts";
+import type { ExplorationFocus, Feeling } from "./exploration.ts";
 import type { Feedback } from "./feedback.ts";
 // Keep the original key so existing users' first experience can be migrated.
 export const STORAGE_KEY = "17job:v1";
@@ -20,6 +21,11 @@ export type Experience = {
   interest: number | null;
   reflection: string;
   rated: boolean;
+  explorationFocus: ExplorationFocus | null;
+  observations: Record<string, Feeling[]>;
+  nextActionId: string | null;
+  nextActionNote: string;
+  nextActionDone: boolean;
 };
 export type Progress = {
   version: 2;
@@ -27,6 +33,7 @@ export type Progress = {
   answers: Answers;
   question: number;
   activeJob: JobId;
+  focusQuestionId: number | null;
   experiences: Partial<Record<JobId, Experience>>;
 };
 export function newExperience(): Experience {
@@ -38,6 +45,11 @@ export function newExperience(): Experience {
     interest: null,
     reflection: "",
     rated: false,
+    explorationFocus: null,
+    observations: {},
+    nextActionId: null,
+    nextActionNote: "",
+    nextActionDone: false,
   };
 }
 export const initialProgress: Progress = {
@@ -46,6 +58,7 @@ export const initialProgress: Progress = {
   answers: {},
   question: 0,
   activeJob: "planner",
+  focusQuestionId: null,
   experiences: {},
 };
 export function experienceFor(
@@ -155,10 +168,51 @@ function validExperience(
 function normalizeExperience(e: Experience): Experience {
   const { mission, responses, feedback, interest, reflection, rated } = e;
   const choices = e.choices ?? [null, null, null, null];
+  const explorationFocus =
+    record(e.explorationFocus) &&
+    (e.explorationFocus.sourceQuestionId === null ||
+      (Number.isInteger(e.explorationFocus.sourceQuestionId) &&
+        Number(e.explorationFocus.sourceQuestionId) >= 1 &&
+        Number(e.explorationFocus.sourceQuestionId) <= 17)) &&
+    ["condition", "question", "scope"].every(
+      (key) =>
+        typeof e.explorationFocus?.[key as keyof ExplorationFocus] === "string",
+    )
+      ? e.explorationFocus
+      : null;
+  const observations: Record<string, Feeling[]> = {};
+  if (record(e.observations))
+    for (const id of ["numbers", "investigate", "uncertainty", "report"]) {
+      const values = e.observations[id];
+      if (
+        Array.isArray(values) &&
+        values.every((value) =>
+          ["interesting", "burdensome", "unclear"].includes(value),
+        )
+      )
+        observations[id] = values.includes("unclear")
+          ? ["unclear"]
+          : ([...new Set(values)] as Feeling[]);
+    }
+  const nextActionId = ["spreadsheet", "hypothesis", "compare"].includes(
+    e.nextActionId ?? "",
+  )
+    ? e.nextActionId
+    : null;
+  const nextActionNote =
+    typeof e.nextActionNote === "string" && e.nextActionNote.length <= 4000
+      ? e.nextActionNote
+      : "";
+  const nextActionDone = !!nextActionId && e.nextActionDone === true;
   const result: Experience = structuredClone({
     mission,
     responses,
     choices,
+    explorationFocus,
+    observations,
+    nextActionId,
+    nextActionNote,
+    nextActionDone,
     feedback,
     interest,
     reflection,
@@ -203,6 +257,7 @@ export function parseProgress(raw: string | null): Progress {
         answers: value.answers as Answers,
         question: Number(value.question),
         activeJob: "planner",
+        focusQuestionId: null,
         experiences: { planner: normalizeExperience(value) },
       };
     } else {
@@ -224,6 +279,12 @@ export function parseProgress(raw: string | null): Progress {
         answers: value.answers as Answers,
         question: Number(value.question),
         activeJob: value.activeJob as JobId,
+        focusQuestionId:
+          Number.isInteger(value.focusQuestionId) &&
+          Number(value.focusQuestionId) >= 1 &&
+          Number(value.focusQuestionId) <= 17
+            ? Number(value.focusQuestionId)
+            : null,
         experiences,
       };
     }

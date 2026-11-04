@@ -2,7 +2,14 @@
 import { useEffect, useRef, useState } from "react";
 import questions from "@/data/questions.json";
 import jobs from "@/data/jobs.json";
-import { analyze, friction, recommend, type Answer } from "@/lib/analysis";
+import exploration from "@/data/exploration.json";
+import { conditionPrompts, focusFor } from "@/lib/exploration";
+import {
+  ConditionResults,
+  ObservationGuide,
+  DiscoveryRecord,
+} from "@/components/exploration";
+import { friction, recommend, type Answer } from "@/lib/analysis";
 import { localFeedback } from "@/lib/feedback";
 import {
   initialProgress,
@@ -35,7 +42,24 @@ export default function Explorer() {
     setS((prev) => updateExperience(prev, patch));
   const openJob = (id: string) => {
     setNotice("");
-    setS((prev) => selectJob(prev, id as JobId));
+    setS((prev) => {
+      let next = selectJob(prev, id as JobId);
+      if (id === "analyst" && !experienceFor(next).explorationFocus) {
+        const prompts = conditionPrompts(
+          questions,
+          prev.answers,
+          exploration.conditions,
+        );
+        next = updateExperience(next, {
+          explorationFocus: focusFor(
+            prompts,
+            prev.focusQuestionId,
+            exploration.analyst,
+          ),
+        });
+      }
+      return next;
+    });
   };
   const [ready, setReady] = useState(false);
   const [saveError, setSaveError] = useState(false);
@@ -111,7 +135,11 @@ export default function Explorer() {
     setNotice("");
     update({ stage });
   };
-  const burdens = analyze(questions, s.answers);
+  const prompts = conditionPrompts(
+    questions,
+    s.answers,
+    exploration.conditions,
+  );
   const allAnswered = questions.every((q) => s.answers[q.id]);
   const q = questions[s.question];
   const mission = activeJob.missions[experience.mission];
@@ -166,7 +194,7 @@ export default function Explorer() {
     const done = isComplete(saved);
     const started = saved.responses.some(Boolean);
     return (
-      <article className="job-card" key={job.id}>
+      <article className="job-card" key={job.id} data-job-id={job.id}>
         <div className="card-top">
           <span className={`job-icon ${job.color}`} aria-hidden="true">
             {job.icon}
@@ -181,9 +209,15 @@ export default function Explorer() {
                   : "준비 중"}
           </span>
         </div>
-        <div className="small muted">{job.category}</div>
-        <h3>{job.title}</h3>
-        <p>{job.description}</p>
+        <div className="small muted">
+          {job.id === "analyst" ? `관련 직무: ${job.title}` : job.category}
+        </div>
+        <h3>{job.id === "analyst" ? exploration.analyst.title : job.title}</h3>
+        <p>
+          {job.id === "analyst"
+            ? exploration.analyst.description
+            : job.description}
+        </p>
         <div className="tags">
           {job.tasks.map((t) => (
             <span key={t}>{t}</span>
@@ -408,7 +442,7 @@ export default function Explorer() {
                   className="text-button"
                   onClick={() => go(allAnswered ? "jobs" : "survey")}
                 >
-                  나의 직무 후보 보기 ↗
+                  나의 작은 경험 찾아보기 ↗
                 </button>
               </div>
               <div className="job-grid">{jobs.map(jobCard)}</div>
@@ -457,7 +491,13 @@ export default function Explorer() {
                       value={value}
                       checked={s.answers[q.id] === value}
                       onChange={() =>
-                        update({ answers: { ...s.answers, [q.id]: value } })
+                        update({
+                          answers: { ...s.answers, [q.id]: value },
+                          focusQuestionId:
+                            s.focusQuestionId === q.id
+                              ? null
+                              : s.focusQuestionId,
+                        })
                       }
                     />
                     <span className="option-letter">
@@ -500,51 +540,16 @@ export default function Explorer() {
           <section className="flow">
             {heading(
               "STEP 01 · 나의 업무 환경",
-              "나를 위해 살펴볼 업무 환경",
-              "응답에서 직접 선택한 부담만 정리했어요. 능력이나 직무 적합도를 판단하는 결과는 아닙니다.",
+              "내가 확인해 볼 일의 조건",
+              "어울리는 직업을 정하는 대신, 응답한 부담을 실제로 확인할 질문과 작은 행동으로 연결했어요.",
             )}
-            <div className="result-layout">
-              <div className="panel">
-                <div className="section-row">
-                  <h2>부담을 느낄 수 있는 환경</h2>
-                  <span className="pill green">나의 응답</span>
-                </div>
-                {burdens.length ? (
-                  <ul className="burden-list">
-                    {burdens.map((b) => (
-                      <li key={b.id}>
-                        <span>{b.title}</span>
-                        <p>{b.environment}</p>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="empty-state">
-                    모든 문항에 ‘둘 다 문제 없음’으로 답했어요. 현재 응답에서
-                    특정 부담이 드러나지 않았습니다. 체험으로 구체적인 상황을
-                    만나보세요.
-                  </div>
-                )}
-              </div>
-              <aside className="panel result-aside">
-                <span className="big-symbol">✳</span>
-                <h2>피해야 할 직업 목록이 아니에요.</h2>
-                <p>
-                  같은 직무라도 조직, 일정, 역할에 따라 환경은 달라져요. 체험 중
-                  어떤 상황이 버거운지 관찰하는 출발점으로 활용해 보세요.
-                </p>
-                <p>
-                  선택하지 않은 반대 환경의 선호나 능력은 추론하지 않았어요.
-                </p>
-                <p className="small">
-                  ‘둘 다 문제 없음’ 응답:{" "}
-                  {questions
-                    .filter((q) => s.answers[q.id] === "both")
-                    .map((q) => q.title)
-                    .join(", ") || "없음"}
-                </p>
-              </aside>
-            </div>
+            <ConditionResults
+              prompts={prompts}
+              selectedId={s.focusQuestionId}
+              onSelect={(id) => update({ focusQuestionId: id })}
+              onStart={() => openJob("analyst")}
+              onBrowse={() => go("jobs")}
+            />
             <div className="actions">
               <button
                 className="secondary"
@@ -554,9 +559,6 @@ export default function Explorer() {
                 }}
               >
                 응답 수정
-              </button>
-              <button className="primary" onClick={() => go("jobs")}>
-                직무 후보 둘러보기 →
               </button>
             </div>
           </section>
@@ -594,7 +596,14 @@ export default function Explorer() {
                   {activeJob.icon}
                 </span>
                 <div className="eyebrow">YOUR CAREER EXPERIENCE</div>
-                <h2>{activeJob.title}</h2>
+                <h2>
+                  {s.activeJob === "analyst"
+                    ? exploration.analyst.title
+                    : activeJob.title}
+                </h2>
+                {s.activeJob === "analyst" && (
+                  <p>관련 직무: {activeJob.title}</p>
+                )}
                 <p>{activeJob.project}</p>
                 <ol>
                   {activeJob.missions.map((m, i) => (
@@ -624,6 +633,12 @@ export default function Explorer() {
                 {heading(
                   `MISSION 0${experience.mission + 1} / 04 · ${mission.subtitle}`,
                   mission.title,
+                )}
+                {s.activeJob === "analyst" && experience.explorationFocus && (
+                  <ObservationGuide
+                    focus={experience.explorationFocus}
+                    mission={experience.mission}
+                  />
                 )}
                 <div className="scenario">
                   <b>당신의 상황</b>
@@ -773,13 +788,36 @@ export default function Explorer() {
             <div className="completion-banner">
               <span>{activeJob.icon}</span>
               <div>
-                <h2>{activeJob.title} · 4단계 체험 완료</h2>
+                <h2>
+                  {s.activeJob === "analyst"
+                    ? exploration.analyst.title
+                    : activeJob.title}{" "}
+                  · 4단계 체험 완료
+                </h2>
                 <p>{activeJob.project} — 내 생각으로 끝까지 해봤어요.</p>
               </div>
             </div>
-            <CompletionReview job={activeJob} experience={experience} />
+            {s.activeJob === "analyst" && (
+              <DiscoveryRecord
+                experience={experience}
+                onChange={updateCurrent}
+                onCompare={() => openJob("planner")}
+              />
+            )}
+            {s.activeJob === "analyst" ? (
+              <details className="panel task-review">
+                <summary>과제 선택과 자료 해설 다시 보기</summary>
+                <CompletionReview job={activeJob} experience={experience} />
+              </details>
+            ) : (
+              <CompletionReview job={activeJob} experience={experience} />
+            )}
             <div className="panel">
-              <h2>이런 일을 더 해보고 싶나요?</h2>
+              <h2>
+                {s.activeJob === "analyst"
+                  ? "전체 체험의 느낌도 남겨볼까요?"
+                  : "이런 일을 더 해보고 싶나요?"}
+              </h2>
               <fieldset className="interest-options">
                 <legend className="sr-only">체험 후 흥미도</legend>
                 {interestLabels.map((label, i) => (
@@ -821,17 +859,19 @@ export default function Explorer() {
               >
                 {experience.rated
                   ? "✓ 회고 저장됨"
-                  : "회고 저장하고 다음 탐색 보기"}
+                  : s.activeJob === "analyst"
+                    ? "전체 느낌과 회고 기록하기"
+                    : "회고 저장하고 다음 탐색 보기"}
               </button>
               <div role="status">
-                {experience.rated && (
+                {experience.rated && s.activeJob !== "analyst" && (
                   <p className="helper">
                     현재 브라우저에 흥미도와 회고를 기록했어요.
                   </p>
                 )}
               </div>
             </div>
-            {experience.rated && (
+            {experience.rated && s.activeJob !== "analyst" && (
               <section className="next-exploration">
                 <h2>다음엔 이런 경험은 어떨까요?</h2>
                 <p className="muted">
@@ -976,7 +1016,18 @@ function ExperienceHistory({
                     ? ` · ${interestLabels[e.interest - 1]}`
                     : ""}
                 </span>
-                {e.rated && e.reflection && (
+                {job.id === "analyst" && e.nextActionId && (
+                  <p className="history-reflection">
+                    다음 행동:{" "}
+                    {
+                      exploration.analyst.nextActions.find(
+                        (action) => action.id === e.nextActionId,
+                      )?.title
+                    }{" "}
+                    · {e.nextActionDone ? "직접 해봤어요" : "해볼 계획이에요"}
+                  </p>
+                )}
+                {e.reflection && (
                   <p className="history-reflection">{e.reflection}</p>
                 )}
               </div>

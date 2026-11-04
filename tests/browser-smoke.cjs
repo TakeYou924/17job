@@ -29,9 +29,7 @@ async function noOverflow(page) {
   );
 }
 async function cardOpen(page, id) {
-  const card = page.locator(".job-card").filter({
-    has: page.getByRole("heading", { name: names[id], exact: true }),
-  });
+  const card = page.locator(`.job-card[data-job-id="${id}"]`);
   await card.getByRole("button").click();
 }
 const choiceIndexes = {
@@ -47,7 +45,11 @@ async function finishJob(page, id, rating) {
       await page.getByRole("radio").nth(choiceIndexes[id][index]).check();
     await page
       .locator("#mission-answer")
-      .fill(id === "analyst" && index === 2 ? "ㅇㅇ" : `${responses[id]} 단계 ${index + 1}의 구체적인 생각입니다.`);
+      .fill(
+        id === "analyst" && index === 2
+          ? "ㅇㅇ"
+          : `${responses[id]} 단계 ${index + 1}의 구체적인 생각입니다.`,
+      );
     await page
       .getByRole("button", { name: "답변 제출하고 피드백 받기" })
       .click();
@@ -75,10 +77,14 @@ async function finishJob(page, id, rating) {
   }
   await page
     .getByRole("heading", {
-      name: `${names[id]} · 4단계 체험 완료`,
+      name: `${id === "analyst" ? "숫자를 보고 이상한 지점 찾아보기" : names[id]} · 4단계 체험 완료`,
       exact: true,
     })
     .waitFor();
+  if (id === "analyst")
+    await page
+      .getByText("과제 선택과 자료 해설 다시 보기", { exact: true })
+      .click();
   await page
     .getByRole("heading", { name: "실제 업무와의 차이", exact: true })
     .waitFor();
@@ -88,41 +94,132 @@ async function finishJob(page, id, rating) {
         "상관관계와 원인 구분하기",
       ),
     );
+  if (id === "analyst") {
+    await page
+      .getByText("과제 선택과 자료 해설 다시 보기", { exact: true })
+      .click();
+    const activities = page.locator(".activity-observations fieldset");
+    await activities
+      .nth(0)
+      .getByRole("checkbox", { name: "흥미로웠어요", exact: true })
+      .check();
+    await activities
+      .nth(0)
+      .getByRole("checkbox", { name: "버거웠어요", exact: true })
+      .check();
+    await activities
+      .nth(2)
+      .getByRole("checkbox", { name: "아직 모르겠어요", exact: true })
+      .check();
+    await page
+      .locator(".next-action-options")
+      .getByRole("radio", { name: /표를 직접 다뤄보기/ })
+      .check();
+    assert.equal(
+      await page
+        .getByRole("checkbox", { name: /이 행동을 직접 해봤어요/ })
+        .isChecked(),
+      false,
+    );
+    const csv = await page.request.get(
+      `${baseURL}/practice/checkout-devices.csv`,
+    );
+    assert.ok(csv.ok());
+    assert.ok((await csv.text()).includes("Mobile,1800,750"));
+    const csvDownload = page.waitForEvent("download");
+    await page.getByRole("link", { name: /연습용 표 내려받기/ }).click();
+    await csvDownload;
+    assert.equal(
+      await page
+        .getByRole("checkbox", { name: /이 행동을 직접 해봤어요/ })
+        .isChecked(),
+      false,
+    );
+    await page
+      .getByLabel(/이 행동에서 확인하고 싶은 점/)
+      .fill("표를 직접 계산해서 숫자 읽기와 차이가 있는지 확인하고 싶어요.");
+    const download = page.waitForEvent("download");
+    await page.getByRole("button", { name: /내 탐색 기록 내려받기/ }).click();
+    const artifact = await download;
+    const text = require("node:fs").readFileSync(await artifact.path(), "utf8");
+    assert.ok(text.includes("흥미로웠어요 · 버거웠어요"));
+    assert.ok(text.includes("표를 직접 다뤄보기"));
+    await page.screenshot({
+      path: "/tmp/17job-discovery-desktop.png",
+      fullPage: true,
+    });
+  }
   await page
-    .getByRole("radio")
+    .locator(".interest-options input")
     .nth(rating - 1)
     .check();
   await page
     .getByLabel(/어떤 순간이 흥미롭거나/)
     .fill(`${names[id]} 회고: ${rating}번째 흥미 응답과 고유한 경험입니다.`);
   await page
-    .getByRole("button", { name: "회고 저장하고 다음 탐색 보기" })
+    .getByRole("button", {
+      name:
+        id === "analyst"
+          ? "전체 느낌과 회고 기록하기"
+          : "회고 저장하고 다음 탐색 보기",
+    })
     .click();
-  await page
-    .getByRole("heading", { name: "다음엔 이런 경험은 어떨까요?" })
-    .waitFor();
-  assert.equal(await page.locator(".next-exploration .job-card").count(), 4);
-  assert.equal(
+  if (id === "analyst") {
+    assert.equal(await page.locator(".next-exploration").count(), 0);
+    await page.reload();
     await page
-      .locator(".next-exploration .job-card")
-      .filter({
-        has: page.getByRole("heading", { name: names[id], exact: true }),
+      .getByRole("heading", {
+        name: "직업 이름 대신, 나의 발견을 남겨요.",
+        exact: true,
       })
-      .count(),
-    0,
-  );
-  if (id === "analyst")
+      .waitFor();
+    assert.equal(
+      await page
+        .locator(".activity-observations fieldset")
+        .nth(0)
+        .getByRole("checkbox", { name: "흥미로웠어요", exact: true })
+        .isChecked(),
+      true,
+    );
+    assert.equal(
+      await page
+        .locator(".activity-observations fieldset")
+        .nth(0)
+        .getByRole("checkbox", { name: "버거웠어요", exact: true })
+        .isChecked(),
+      true,
+    );
+    assert.ok(
+      (await page.locator("#next-action-note").inputValue()).includes(
+        "숫자 읽기",
+      ),
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    await noOverflow(page);
     await page.screenshot({
-      path: "/tmp/17job-analyst-review.png",
+      path: "/tmp/17job-discovery-mobile.png",
       fullPage: true,
     });
-  await page.reload();
-  await page
-    .getByRole("heading", { name: "다음엔 이런 경험은 어떨까요?" })
-    .waitFor();
+    await page.setViewportSize({ width: 1440, height: 1000 });
+  } else {
+    await page
+      .getByRole("heading", { name: "다음엔 이런 경험은 어떨까요?" })
+      .waitFor();
+    assert.equal(await page.locator(".next-exploration .job-card").count(), 4);
+    assert.equal(
+      await page
+        .locator(`.next-exploration .job-card[data-job-id="${id}"]`)
+        .count(),
+      0,
+    );
+    await page.reload();
+    await page
+      .getByRole("heading", { name: "다음엔 이런 경험은 어떨까요?" })
+      .waitFor();
+  }
   assert.equal(
     await page
-      .getByRole("radio")
+      .locator(".interest-options input")
       .nth(rating - 1)
       .isChecked(),
     true,
@@ -151,32 +248,62 @@ async function finishJob(page, id, rating) {
     for (let i = 0; i < 17; i++) {
       await page
         .getByRole("radio")
-        .nth(i === 0 ? 0 : i === 1 ? 1 : 2)
+        .nth(i === 0 ? 0 : i === 1 || i === 3 ? 1 : 2)
         .check();
       await page
         .getByRole("button", { name: i === 16 ? "결과 살펴보기" : "다음 질문" })
         .click();
     }
     await page
-      .getByRole("heading", { name: "나를 위해 살펴볼 업무 환경", exact: true })
+      .getByRole("heading", { name: "내가 확인해 볼 일의 조건", exact: true })
       .waitFor();
-    assert.equal(await page.locator(".burden-list li").count(), 2);
+    assert.equal(await page.locator(".burden-list li").count(), 3);
     await page.reload();
     await page
-      .getByRole("heading", { name: "나를 위해 살펴볼 업무 환경", exact: true })
+      .getByRole("heading", { name: "내가 확인해 볼 일의 조건", exact: true })
       .waitFor();
-    await page.getByRole("button", { name: "직무 후보 둘러보기" }).click();
+    await page
+      .getByRole("button", {
+        name: "문제의 성격 질문을 탐색 기록에 담기",
+        exact: true,
+      })
+      .click();
+    await page.screenshot({
+      path: "/tmp/17job-conditions-desktop.png",
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await noOverflow(page);
+    await page.screenshot({
+      path: "/tmp/17job-conditions-mobile.png",
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page
+      .getByRole("button", { name: "다른 경험도 둘러보기", exact: true })
+      .click();
     assert.equal(await page.locator(".job-card").count(), 5);
     for (const id of ["designer", "marketer", "operator"]) {
-      const card = page
-        .locator(".job-card")
-        .filter({
-          has: page.getByRole("heading", { name: names[id], exact: true }),
-        });
+      const card = page.locator(".job-card").filter({
+        has: page.getByRole("heading", { name: names[id], exact: true }),
+      });
       assert.equal(await card.getByRole("button").count(), 0);
       assert.ok((await card.innerText()).includes("준비 중"));
     }
-    await cardOpen(page, "analyst");
+    await page
+      .getByRole("button", { name: "나의 업무 환경", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "이 상황을 직접 확인해 보기", exact: false })
+      .click();
+    await page
+      .getByRole("heading", { name: "이번에 확인할 나의 질문", exact: true })
+      .waitFor();
+    assert.ok(
+      (await page.locator(".observation-guide").innerText()).includes(
+        "확실하지",
+      ),
+    );
     await page
       .getByRole("heading", { name: "구매가 줄어든 구간 찾기", exact: true })
       .waitFor();
@@ -202,6 +329,7 @@ async function finishJob(page, id, rating) {
     });
     await page.setViewportSize({ width: 1440, height: 1000 });
     await finishJob(page, "analyst", 3);
+    await page.getByRole("button", { name: "직무 체험", exact: true }).click();
     await cardOpen(page, "planner");
     assert.equal(
       await page.locator("#mission-answer").inputValue(),
@@ -255,7 +383,10 @@ async function finishJob(page, id, rating) {
     await page
       .getByRole("button", { name: "데이터 분석가 기록 열기", exact: true })
       .click();
-    assert.equal(await page.getByRole("radio").nth(2).isChecked(), true);
+    assert.equal(
+      await page.locator(".interest-options input").nth(2).isChecked(),
+      true,
+    );
     assert.ok(
       (await page.locator("#reflection").inputValue()).includes(
         "데이터 분석가 회고",
