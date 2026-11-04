@@ -66,7 +66,7 @@ export function ConditionResults({
       )}
     </li>
   );
-  const visible = prompts.slice(0, 3);
+  const quickChecks = prompts.slice(0, 3);
   const bothCount = questions.filter(
     (question) => answers[question.id] === "both",
   ).length;
@@ -85,19 +85,13 @@ export function ConditionResults({
       </div>
       <div className="sheet-section">
         <h3>부담으로 표시한 환경</h3>
-        {visible.length ? (
+        {prompts.length ? (
           <>
             <ul className="condition-tags">
-              {visible.map((prompt) => (
+              {prompts.map((prompt) => (
                 <li key={prompt.id}>{prompt.shortLabel}</li>
               ))}
             </ul>
-            {prompts.length > 3 && (
-              <p className="small muted">
-                설문 순서로 3개를 먼저 표시했어요. 나머지 {prompts.length - 3}
-                개는 전체 응답에서 확인할 수 있어요.
-              </p>
-            )}
           </>
         ) : (
           <div className="sheet-neutral">
@@ -111,9 +105,9 @@ export function ConditionResults({
       </div>
       <div className="sheet-section">
         <h3>일자리를 알아볼 때 확인해 보세요</h3>
-        {visible.length ? (
+        {quickChecks.length ? (
           <ul className="quick-checks">
-            {visible.map((prompt) => (
+            {quickChecks.map((prompt) => (
               <li key={prompt.id}>
                 <span aria-hidden="true">✓</span>
                 {prompt.quickCheck}

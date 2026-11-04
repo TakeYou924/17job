@@ -623,8 +623,16 @@ async function finishJob(page, id, rating) {
           })
           .waitFor();
         assert.equal(await edge.locator(".condition-list li").count(), 0);
+        assert.equal(await edge.locator(".condition-tags li").count(), 0);
       } else {
-        assert.equal(await edge.locator(".condition-tags li").count(), 3);
+        assert.equal(await edge.locator(".condition-tags li").count(), 17);
+        const guidance = require("../src/data/exploration.json");
+        assert.deepEqual(
+          await edge.locator(".condition-tags li").allTextContents(),
+          guidance.conditions.map((row) => row.B.shortLabel),
+        );
+        await noOverflow(edge);
+
         assert.equal(await edge.locator(".quick-checks li").count(), 3);
         assert.equal(
           await edge.locator(".condition-list li:visible").count(),
