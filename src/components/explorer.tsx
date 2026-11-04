@@ -546,8 +546,6 @@ export default function Explorer() {
             <ConditionResults
               prompts={prompts}
               answers={s.answers}
-              selectedId={s.focusQuestionId}
-              onSelect={(id) => update({ focusQuestionId: id })}
               onStart={() => openJob("analyst")}
               onBrowse={() => go("jobs")}
               savedFocus={experienceFor(s, "analyst").explorationFocus}

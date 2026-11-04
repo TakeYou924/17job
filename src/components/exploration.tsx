@@ -16,57 +16,17 @@ const feelingLabels: { id: Feeling; label: string }[] = [
 ];
 export function ConditionResults({
   prompts,
-  selectedId,
-  onSelect,
   onStart,
   onBrowse,
   savedFocus,
   answers,
 }: {
   prompts: ReturnType<typeof conditionPrompts>;
-  selectedId: number | null;
-  onSelect: (id: number) => void;
   onStart: () => void;
   onBrowse: () => void;
   savedFocus: ExplorationFocus | null;
   answers: Answers;
 }) {
-  const renderPrompt = (
-    prompt: ReturnType<typeof conditionPrompts>[number],
-  ) => (
-    <li key={prompt.id}>
-      <div className="condition-title">
-        <span>{prompt.title}</span>
-        <strong>{prompt.environment}</strong>
-      </div>
-      <p>
-        <b>확인할 조건</b> {prompt.check}
-      </p>
-      <p>
-        <b>아직 모르는 점</b> {prompt.question}
-      </p>
-      <button
-        className={
-          selectedId === prompt.id ? "secondary focus-selected" : "text-button"
-        }
-        onClick={() => onSelect(prompt.id)}
-        aria-pressed={selectedId === prompt.id}
-        aria-label={`${prompt.title} 질문을 탐색 기록에 담기`}
-      >
-        {selectedId === prompt.id
-          ? "✓ 이번 탐색에 담았어요"
-          : "이 질문을 탐색 기록에 담기"}{" "}
-        →
-      </button>
-      {!prompt.trialQuestion && (
-        <p className="helper">
-          이 조건은 이번 온라인 체험만으로 확인하기 어려워요. 실제 근무 환경을
-          알아볼 질문으로 남깁니다.
-        </p>
-      )}
-    </li>
-  );
-  const quickChecks = prompts.slice(0, 3);
   const bothCount = questions.filter(
     (question) => answers[question.id] === "both",
   ).length;
@@ -103,23 +63,6 @@ export function ConditionResults({
           </div>
         )}
       </div>
-      <div className="sheet-section">
-        <h3>일자리를 알아볼 때 확인해 보세요</h3>
-        {quickChecks.length ? (
-          <ul className="quick-checks">
-            {quickChecks.map((prompt) => (
-              <li key={prompt.id}>
-                <span aria-hidden="true">✓</span>
-                {prompt.quickCheck}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="sheet-neutral-prompt">
-            작은 체험에서 무엇이 흥미롭고 버거운지 먼저 살펴보세요.
-          </p>
-        )}
-      </div>
       <div className="sheet-section sheet-next">
         <div>
           <span className="eyebrow">다음 한 걸음</span>
@@ -144,70 +87,6 @@ export function ConditionResults({
         표시한 응답을 요약한 결과예요. 직무 적합도나 부담의 심각도를 판단한 것은
         아닙니다.
       </p>
-      <div className="sheet-details">
-        <details className="full-responses">
-          <summary>전체 응답 보기 · 17문항</summary>
-          <p className="small muted">
-            A/B는 감당하기 더 어려운 환경입니다. 선택하지 않은 반대 환경의
-            선호·능력은 추론하지 않았어요.
-          </p>
-          <div className="response-table-wrap">
-            <table>
-              <caption className="sr-only">17문항 전체 응답</caption>
-              <thead>
-                <tr>
-                  <th scope="col">항목</th>
-                  <th scope="col">내 응답</th>
-                </tr>
-              </thead>
-              <tbody>
-                {questions.map((question) => {
-                  const answer = answers[question.id];
-                  return (
-                    <tr key={question.id}>
-                      <th scope="row">
-                        {question.id}. {question.title}
-                      </th>
-                      <td>
-                        {answer === "A"
-                          ? `A · ${question.a}`
-                          : answer === "B"
-                            ? `B · ${question.b}`
-                            : answer === "both"
-                              ? "둘 다 문제 없음"
-                              : "미응답"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </details>
-        <details className="result-explanations">
-          <summary>조건 설명과 확인 질문 펼치기</summary>
-          <p className="small muted">
-            아직 모르는 점과 체험으로 확인할 수 있는 범위를 살펴보세요. 질문을
-            골라도 체험 시작은 자유롭습니다.
-          </p>
-          {selectedId && prompts.find((prompt) => prompt.id === selectedId) && (
-            <p className="selected-question-note" role="status">
-              확인 목록에 담은 질문:{" "}
-              {prompts.find((prompt) => prompt.id === selectedId)?.question}
-            </p>
-          )}
-          {prompts.length ? (
-            <ul className="burden-list condition-list">
-              {prompts.map(renderPrompt)}
-            </ul>
-          ) : (
-            <p className="helper">
-              선택한 부담 조건이 없어요. 중립적인 관찰 질문으로 체험을
-              시작합니다.
-            </p>
-          )}
-        </details>
-      </div>
       <button className="text-button sheet-browse" onClick={onBrowse}>
         다른 경험도 둘러보기 →
       </button>

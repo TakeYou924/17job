@@ -303,54 +303,35 @@ async function finishJob(page, id, rating) {
     await page
       .getByRole("heading", { name: "나의 업무 환경 요약", exact: true })
       .waitFor();
-    assert.equal(await page.locator(".burden-list li").count(), 3);
     assert.equal(await page.locator(".condition-tags li").count(), 3);
-    assert.equal(await page.locator(".quick-checks li").count(), 3);
-    assert.equal(await page.locator(".condition-list li:visible").count(), 0);
+    const guidance = require("../src/data/exploration.json");
+    assert.deepEqual(
+      await page.locator(".condition-tags li").allTextContents(),
+      [
+        guidance.conditions[0].A.shortLabel,
+        guidance.conditions[1].B.shortLabel,
+        guidance.conditions[3].B.shortLabel,
+      ],
+    );
     assert.equal(
-      await page.locator(".response-table-wrap tbody tr:visible").count(),
+      await page
+        .locator(".quick-checks,.full-responses,.result-explanations")
+        .count(),
       0,
     );
-    await page.getByText("전체 응답 보기 · 17문항", { exact: true }).click();
     assert.equal(
-      await page.locator(".response-table-wrap tbody tr").count(),
-      17,
+      await page
+        .getByRole("heading", {
+          name: "일자리를 알아볼 때 확인해 보세요",
+          exact: true,
+        })
+        .count(),
+      0,
     );
-    const originalQuestions = require("../src/data/questions.json");
-    for (let index = 0; index < 17; index++) {
-      const expected =
-        index === 0
-          ? `A · ${originalQuestions[index].a}`
-          : index === 1 || index === 3
-            ? `B · ${originalQuestions[index].b}`
-            : "둘 다 문제 없음";
-      assert.equal(
-        await page
-          .locator(".response-table-wrap tbody tr")
-          .nth(index)
-          .locator("td")
-          .innerText(),
-        expected,
-      );
-    }
-    await page.getByText("전체 응답 보기 · 17문항", { exact: true }).click();
-
     await page.reload();
     await page
       .getByRole("heading", { name: "나의 업무 환경 요약", exact: true })
       .waitFor();
-    await page
-      .getByText("조건 설명과 확인 질문 펼치기", { exact: true })
-      .click();
-    await page
-      .getByRole("button", {
-        name: "문제의 성격 질문을 탐색 기록에 담기",
-        exact: true,
-      })
-      .click();
-    await page
-      .getByText("조건 설명과 확인 질문 펼치기", { exact: true })
-      .click();
     await page.screenshot({
       path: "/tmp/17job-conditions-desktop.png",
       fullPage: true,
@@ -414,15 +395,6 @@ async function finishJob(page, id, rating) {
     await finishJob(page, "analyst", 3);
     await page
       .getByRole("button", { name: "나의 업무 환경", exact: true })
-      .click();
-    await page
-      .getByText("조건 설명과 확인 질문 펼치기", { exact: true })
-      .click();
-    await page
-      .getByRole("button", {
-        name: "작업 방식 질문을 탐색 기록에 담기",
-        exact: true,
-      })
       .click();
     assert.ok(
       (await page.locator(".saved-focus-note").innerText()).includes(
@@ -633,44 +605,15 @@ async function finishJob(page, id, rating) {
         );
         await noOverflow(edge);
 
-        assert.equal(await edge.locator(".quick-checks li").count(), 3);
+        assert.equal(await edge.locator(".quick-checks li").count(), 0);
         assert.equal(
           await edge.locator(".condition-list li:visible").count(),
           0,
         );
-        await edge
-          .getByText("전체 응답 보기 · 17문항", { exact: true })
-          .click();
         assert.equal(
-          await edge.locator(".response-table-wrap tbody tr").count(),
-          17,
+          await edge.locator(".full-responses,.result-explanations").count(),
+          0,
         );
-        const originalQuestions = require("../src/data/questions.json");
-        for (let index = 0; index < 17; index++)
-          assert.equal(
-            await edge
-              .locator(".response-table-wrap tbody tr")
-              .nth(index)
-              .locator("td")
-              .innerText(),
-            `B · ${originalQuestions[index].b}`,
-          );
-        await edge
-          .getByText("전체 응답 보기 · 17문항", { exact: true })
-          .click();
-        await edge
-          .getByText("조건 설명과 확인 질문 펼치기", { exact: true })
-          .click();
-        assert.equal(
-          await edge.locator(".condition-list li:visible").count(),
-          17,
-        );
-        await edge
-          .getByRole("button", {
-            name: "소득과 안정성 질문을 탐색 기록에 담기",
-            exact: true,
-          })
-          .click();
       }
       await edge
         .getByRole("button", {
@@ -687,7 +630,7 @@ async function finishJob(page, id, rating) {
           .click();
         assert.ok(
           (await edge.locator(".observation-guide").innerText()).includes(
-            "직접 확인하기 어렵",
+            "실제 장기 근무",
           ),
         );
       } else {
