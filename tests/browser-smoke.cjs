@@ -138,6 +138,33 @@ async function finishJob(page, id, rating) {
     await page
       .getByLabel(/이 행동에서 확인하고 싶은 점/)
       .fill("표를 직접 계산해서 숫자 읽기와 차이가 있는지 확인하고 싶어요.");
+    await page
+      .locator(".next-action-options")
+      .getByRole("radio", { name: /다른 원인 하나 더 조사해 보기/ })
+      .check();
+    await page
+      .getByLabel("다른 원인 한 가지와 확인할 자료를 적어 보세요.")
+      .fill("휴일 영향일 수 있습니다. 일자별 방문 구성을 확인합니다.");
+    await page
+      .locator(".next-action-options")
+      .getByRole("radio", { name: /표를 직접 다뤄보기/ })
+      .check();
+    assert.ok(
+      (await page.locator("#next-action-note").inputValue()).includes(
+        "숫자 읽기",
+      ),
+    );
+    await page
+      .locator(".next-action-options")
+      .getByRole("radio", { name: /다른 원인 하나 더 조사해 보기/ })
+      .check();
+    assert.ok(
+      (await page.locator("#next-action-note").inputValue()).includes("휴일"),
+    );
+    await page
+      .locator(".next-action-options")
+      .getByRole("radio", { name: /표를 직접 다뤄보기/ })
+      .check();
     const download = page.waitForEvent("download");
     await page.getByRole("button", { name: /내 탐색 기록 내려받기/ }).click();
     const artifact = await download;
@@ -329,6 +356,43 @@ async function finishJob(page, id, rating) {
     });
     await page.setViewportSize({ width: 1440, height: 1000 });
     await finishJob(page, "analyst", 3);
+    await page
+      .getByRole("button", { name: "나의 업무 환경", exact: true })
+      .click();
+    await page
+      .getByRole("button", {
+        name: "작업 방식 질문을 탐색 기록에 담기",
+        exact: true,
+      })
+      .click();
+    assert.ok(
+      (await page.locator(".saved-focus-note").innerText()).includes(
+        "확실하지",
+      ),
+    );
+    await page
+      .getByRole("button", { name: "이 상황을 직접 확인해 보기", exact: false })
+      .click();
+    assert.ok(
+      (await page.locator(".discovery-question").innerText()).includes(
+        "확실하지",
+      ),
+    );
+
+    await page
+      .locator(".next-action-options")
+      .getByRole("radio", { name: /사람의 이야기를 읽는 과정과 비교하기/ })
+      .check();
+    await page
+      .getByRole("button", {
+        name: "인터뷰를 읽는 체험 시작하기",
+        exact: false,
+      })
+      .click();
+    await page
+      .getByRole("heading", { name: "사용자의 목소리 듣기", exact: true })
+      .waitFor();
+
     await page.getByRole("button", { name: "직무 체험", exact: true }).click();
     await cardOpen(page, "planner");
     assert.equal(
@@ -464,6 +528,90 @@ async function finishJob(page, id, rating) {
       2,
     );
 
+    // A neutral report never invents a preference; a long report keeps the start action reachable.
+    for (const variant of ["neutral", "all-burdens"]) {
+      const edge = await browser.newPage({
+        viewport: { width: 390, height: 844 },
+      });
+      edge.on("pageerror", (error) => errors.push(error.message));
+      const value = {
+        version: 2,
+        stage: "results",
+        answers: Object.fromEntries(
+          Array.from({ length: 17 }, (_, index) => [
+            index + 1,
+            variant === "neutral" ? "both" : "B",
+          ]),
+        ),
+        question: 16,
+        activeJob: "analyst",
+        experiences: {},
+      };
+      await edge.addInitScript((value) => {
+        if (!localStorage.getItem("17job:v1"))
+          localStorage.setItem("17job:v1", JSON.stringify(value));
+      }, value);
+      await edge.goto(baseURL);
+      await edge
+        .getByRole("heading", { name: "내가 확인해 볼 일의 조건", exact: true })
+        .waitFor();
+      await noOverflow(edge);
+      if (variant === "neutral") {
+        await edge
+          .getByRole("heading", {
+            name: "특정한 부담은 아직 드러나지 않았어요.",
+            exact: true,
+          })
+          .waitFor();
+        assert.equal(await edge.locator(".condition-list li").count(), 0);
+      } else {
+        assert.equal(
+          await edge.locator(".condition-list li:visible").count(),
+          3,
+        );
+        await edge
+          .getByText("나머지 확인할 조건 14개 펼치기", { exact: true })
+          .click();
+        assert.equal(
+          await edge.locator(".condition-list li:visible").count(),
+          17,
+        );
+        await edge
+          .getByRole("button", {
+            name: "소득과 안정성 질문을 탐색 기록에 담기",
+            exact: true,
+          })
+          .click();
+      }
+      await edge
+        .getByRole("button", {
+          name: "이 상황을 직접 확인해 보기",
+          exact: false,
+        })
+        .click();
+      await edge
+        .getByRole("heading", { name: "이번에 확인할 나의 질문", exact: true })
+        .waitFor();
+      if (variant === "all-burdens") {
+        await edge
+          .getByText("이 체험으로 확인할 수 있는 범위", { exact: true })
+          .click();
+        assert.ok(
+          (await edge.locator(".observation-guide").innerText()).includes(
+            "직접 확인하기 어렵",
+          ),
+        );
+      } else {
+        const stored = await edge.evaluate(() =>
+          JSON.parse(localStorage.getItem("17job:v1")),
+        );
+        assert.equal(
+          stored.experiences.analyst.explorationFocus.sourceQuestionId,
+          null,
+        );
+      }
+      await noOverflow(edge);
+    }
     const blocked = await browser.newPage();
     blocked.on("pageerror", (error) => errors.push(error.message));
     await blocked.addInitScript(() => {
@@ -484,7 +632,7 @@ async function finishJob(page, id, rating) {
     );
     assert.deepEqual(errors, []);
     console.log(
-      "PASS: 17 questions; planner regression and new analyst / 8 missions; job switching and isolated drafts; ratings and reflections; next-job navigation; history; invalidation isolation; v1 migration; reload persistence; reset; mobile overflow; storage blocked; no browser errors",
+      "PASS: 17 questions; planner regression and new analyst / 8 missions; job switching and isolated drafts; ratings and reflections; conditions-to-question direct start; self-reported discoveries; CSV/TXT downloads; next-action draft preservation; neutral/unobservable/17-burden cases; history; invalidation isolation; v1 migration; reload persistence; reset; mobile overflow; storage blocked; no browser errors",
     );
   } finally {
     await browser.close();

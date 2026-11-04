@@ -6,7 +6,7 @@ import {
   type Feeling,
   type conditionPrompts,
 } from "@/lib/exploration";
-import type { Experience } from "@/lib/storage";
+import { switchNextAction, type Experience } from "@/lib/storage";
 const feelingLabels: { id: Feeling; label: string }[] = [
   { id: "interesting", label: "흥미로웠어요" },
   { id: "burdensome", label: "버거웠어요" },
@@ -18,13 +18,50 @@ export function ConditionResults({
   onSelect,
   onStart,
   onBrowse,
+  savedFocus,
 }: {
   prompts: ReturnType<typeof conditionPrompts>;
   selectedId: number | null;
   onSelect: (id: number) => void;
   onStart: () => void;
   onBrowse: () => void;
+  savedFocus: ExplorationFocus | null;
 }) {
+  const renderPrompt = (
+    prompt: ReturnType<typeof conditionPrompts>[number],
+  ) => (
+    <li key={prompt.id}>
+      <div className="condition-title">
+        <span>{prompt.title}</span>
+        <strong>{prompt.environment}</strong>
+      </div>
+      <p>
+        <b>확인할 조건</b> {prompt.check}
+      </p>
+      <p>
+        <b>아직 모르는 점</b> {prompt.question}
+      </p>
+      <button
+        className={
+          selectedId === prompt.id ? "secondary focus-selected" : "text-button"
+        }
+        onClick={() => onSelect(prompt.id)}
+        aria-pressed={selectedId === prompt.id}
+        aria-label={`${prompt.title} 질문을 탐색 기록에 담기`}
+      >
+        {selectedId === prompt.id
+          ? "✓ 이번 탐색에 담았어요"
+          : "이 질문을 탐색 기록에 담기"}{" "}
+        →
+      </button>
+      {!prompt.trialQuestion && (
+        <p className="helper">
+          이 조건은 이번 온라인 체험만으로 확인하기 어려워요. 실제 근무 환경을
+          알아볼 질문으로 남깁니다.
+        </p>
+      )}
+    </li>
+  );
   return (
     <>
       <section
@@ -38,43 +75,32 @@ export function ConditionResults({
           설문 순서이며 중요도 순위가 아닙니다.
         </p>
         {prompts.length ? (
-          <ul className="burden-list condition-list">
-            {prompts.map((prompt) => (
-              <li key={prompt.id}>
-                <div className="condition-title">
-                  <span>{prompt.title}</span>
-                  <strong>{prompt.environment}</strong>
-                </div>
-                <p>
-                  <b>확인할 조건</b> {prompt.check}
+          <>
+            {selectedId &&
+              prompts.find((prompt) => prompt.id === selectedId) && (
+                <p className="selected-question-note" role="status">
+                  이번 탐색에 담은 질문:{" "}
+                  {prompts.find((prompt) => prompt.id === selectedId)?.question}
                 </p>
-                <p>
-                  <b>아직 모르는 점</b> {prompt.question}
+              )}
+            <ul className="burden-list condition-list">
+              {prompts.slice(0, 3).map(renderPrompt)}
+            </ul>
+            {prompts.length > 3 && (
+              <details className="more-conditions">
+                <summary>
+                  나머지 확인할 조건 {prompts.length - 3}개 펼치기
+                </summary>
+                <p className="small muted">
+                  먼저 보인 세 항목과 동일한 응답입니다. 중요도를 다르게
+                  해석하지 않아요.
                 </p>
-                <button
-                  className={
-                    selectedId === prompt.id
-                      ? "secondary focus-selected"
-                      : "text-button"
-                  }
-                  onClick={() => onSelect(prompt.id)}
-                  aria-pressed={selectedId === prompt.id}
-                  aria-label={`${prompt.title} 질문을 탐색 기록에 담기`}
-                >
-                  {selectedId === prompt.id
-                    ? "✓ 이번 탐색에 담았어요"
-                    : "이 질문을 탐색 기록에 담기"}{" "}
-                  →
-                </button>
-                {!prompt.trialQuestion && (
-                  <p className="helper">
-                    이 조건은 이번 온라인 체험만으로 확인하기 어려워요. 실제
-                    근무 환경을 알아볼 질문으로 남깁니다.
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
+                <ul className="burden-list condition-list">
+                  {prompts.slice(3).map(renderPrompt)}
+                </ul>
+              </details>
+            )}
+          </>
         ) : (
           <div className="empty-state">
             <h3>특정한 부담은 아직 드러나지 않았어요.</h3>
@@ -97,6 +123,16 @@ export function ConditionResults({
           <p className="small muted">
             {content.analyst.duration} · 관련 직무: 데이터 분석가
           </p>
+          {savedFocus && (
+            <div className="saved-focus-note">
+              <b>이어서 볼 체험의 질문</b>
+              <p>{savedFocus.question}</p>
+              <p className="small muted">
+                이미 시작한 체험의 질문과 답변을 유지합니다. 새로 고른 조건은
+                별도의 확인 목록으로 남겨요.
+              </p>
+            </div>
+          )}
           <h3>이번에 관찰할 것</h3>
           <p>
             ‘숫자를 비교하는 과정’과 ‘원인을 아직 확정할 수 없는 상황’을 각각
@@ -285,13 +321,7 @@ export function DiscoveryRecord({
               type="radio"
               name="next-action"
               checked={next.id === experience.nextActionId}
-              onChange={() =>
-                onChange({
-                  nextActionId: next.id,
-                  nextActionNote: "",
-                  nextActionDone: false,
-                })
-              }
+              onChange={() => onChange(switchNextAction(experience, next.id))}
             />
             <span>
               <b>{next.title}</b>

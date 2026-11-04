@@ -26,6 +26,7 @@ export type Experience = {
   nextActionId: string | null;
   nextActionNote: string;
   nextActionDone: boolean;
+  actionDrafts: Record<string, { note: string; done: boolean }>;
 };
 export type Progress = {
   version: 2;
@@ -50,6 +51,7 @@ export function newExperience(): Experience {
     nextActionId: null,
     nextActionNote: "",
     nextActionDone: false,
+    actionDrafts: {},
   };
 }
 export const initialProgress: Progress = {
@@ -125,6 +127,28 @@ export function chooseOption(state: Progress, choice: string): Progress {
     ),
     rated: false,
   });
+}
+export function switchNextAction(
+  experience: Experience,
+  id: string,
+): Partial<Experience> {
+  if (
+    !["spreadsheet", "hypothesis", "compare"].includes(id) ||
+    id === experience.nextActionId
+  )
+    return {};
+  const drafts = { ...experience.actionDrafts };
+  if (experience.nextActionId)
+    drafts[experience.nextActionId] = {
+      note: experience.nextActionNote,
+      done: experience.nextActionDone,
+    };
+  return {
+    actionDrafts: drafts,
+    nextActionId: id,
+    nextActionNote: drafts[id]?.note ?? "",
+    nextActionDone: drafts[id]?.done ?? false,
+  };
 }
 function record(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -204,6 +228,18 @@ function normalizeExperience(e: Experience): Experience {
       ? e.nextActionNote
       : "";
   const nextActionDone = !!nextActionId && e.nextActionDone === true;
+  const actionDrafts: Experience["actionDrafts"] = {};
+  if (record(e.actionDrafts))
+    for (const id of ["spreadsheet", "hypothesis", "compare"]) {
+      const draft = e.actionDrafts[id];
+      if (
+        record(draft) &&
+        typeof draft.note === "string" &&
+        draft.note.length <= 4000 &&
+        typeof draft.done === "boolean"
+      )
+        actionDrafts[id] = { note: draft.note, done: draft.done };
+    }
   const result: Experience = structuredClone({
     mission,
     responses,
@@ -213,6 +249,7 @@ function normalizeExperience(e: Experience): Experience {
     nextActionId,
     nextActionNote,
     nextActionDone,
+    actionDrafts,
     feedback,
     interest,
     reflection,

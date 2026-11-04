@@ -17,9 +17,11 @@ import {
   updateExperience,
   editResponse,
   chooseOption,
+  switchNextAction,
   isComplete,
   JOB_IDS,
   type Progress,
+  type Experience,
 } from "../src/lib/storage.ts";
 const questions = JSON.parse(
   readFileSync(new URL("../src/data/questions.json", import.meta.url), "utf8"),
@@ -478,4 +480,58 @@ test("downloadable follow-up CSV matches scenario data", () => {
   );
   assert.ok(csv.includes("PC,600,450"));
   assert.ok(csv.includes("Mobile,1800,750"));
+});
+
+test("switching next actions preserves separate notes and self-reported completion", () => {
+  let e: Experience = {
+    ...newExperience(),
+    nextActionId: "spreadsheet",
+    nextActionNote: "표 계산을 직접 해봤다",
+    nextActionDone: true,
+  };
+  e = { ...e, ...switchNextAction(e, "hypothesis") };
+  assert.equal(e.nextActionNote, "");
+  assert.equal(e.nextActionDone, false);
+  e = { ...e, nextActionNote: "요일 효과일 수 있다. 일자별 비율을 확인한다." };
+  e = { ...e, ...switchNextAction(e, "spreadsheet") };
+  assert.equal(e.nextActionNote, "표 계산을 직접 해봤다");
+  assert.equal(e.nextActionDone, true);
+  e = { ...e, ...switchNextAction(e, "hypothesis") };
+  assert.ok(e.nextActionNote.includes("요일"));
+  assert.equal(e.nextActionDone, false);
+  const state = { ...initialProgress, answers, experiences: { analyst: e } };
+  assert.deepEqual(
+    experienceFor(parseProgress(JSON.stringify(state)), "analyst"),
+    e,
+  );
+});
+test("invalid discovery values reset only the affected optional fields", () => {
+  const state = {
+    ...initialProgress,
+    answers,
+    activeJob: "analyst",
+    experiences: {
+      analyst: {
+        ...completed,
+        explorationFocus: { question: 123 },
+        observations: {
+          numbers: ["invalid"],
+          uncertainty: ["unclear", "interesting"],
+        },
+        nextActionId: "bad",
+        nextActionDone: true,
+        nextActionNote: 45,
+        actionDrafts: { spreadsheet: { note: 123, done: true } },
+      },
+    },
+  };
+  const e = experienceFor(parseProgress(JSON.stringify(state)));
+  assert.equal(e.explorationFocus, null);
+  assert.equal(e.observations.numbers, undefined);
+  assert.deepEqual(e.observations.uncertainty, ["unclear"]);
+  assert.equal(e.nextActionId, null);
+  assert.equal(e.nextActionDone, false);
+  assert.equal(e.nextActionNote, "");
+  assert.deepEqual(e.actionDrafts, {});
+  assert.deepEqual(e.responses, completed.responses);
 });

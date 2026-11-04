@@ -549,6 +549,7 @@ export default function Explorer() {
               onSelect={(id) => update({ focusQuestionId: id })}
               onStart={() => openJob("analyst")}
               onBrowse={() => go("jobs")}
+              savedFocus={experienceFor(s, "analyst").explorationFocus}
             />
             <div className="actions">
               <button
