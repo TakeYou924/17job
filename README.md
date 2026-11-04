@@ -76,3 +76,12 @@ npm run test:e2e
 
 
 확인 조건이 많으면 처음 세 항목과 나머지 펼치기로 나눠 보여줍니다. 진행 중인 체험의 질문은 시작 당시 기준으로 유지합니다. 다른 조건을 고르더라도 기존 체험의 질문·답변을 자동으로 덮어쓰지 않습니다. 다음 행동을 바꿔도 각 행동의 메모와 실행 기록을 보존합니다.
+
+
+## 배포 없이 실제 화면 테스트
+
+`preview/17job-test.html`을 내려받아 일반 Chrome/Edge에서 열면 설치나 Vercel 로그인 없이 현재 화면을 누르며 테스트할 수 있습니다. React 화면·데이터·스타일·연습 CSV를 파일 안에 포함합니다. API·외부 폰트·원격 스크립트를 사용하지 않습니다. 개인 기록은 여전히 브라우저 로컬 저장이며 파일 안에 사용자 답변을 포함해서 배포하지 않습니다.
+
+재생성: `npm run preview:file`. 이 명령은 Next.js 빌드 후 같은 Explorer 컴포넌트를 단일 HTML로 묶습니다. 서버 기능을 추가할 경우 이 미리보기에도 적용 가능한지 다시 확인해야 합니다.
+
+관리형 브라우저가 file URL을 차단하면 로컬 HTTP로 검증할 수 있습니다. `python -m http.server 3200 --bind 127.0.0.1 --directory preview`로 시작하고, 별도 터미널에서 `CHROMIUM_PATH=/usr/bin/chromium PREVIEW_STANDALONE=1 BASE_URL=http://127.0.0.1:3200/17job-test.html npm run test:e2e`를 실행합니다. 이 주소는 내부 검증용이며 공유 가능한 공개 링크는 아닙니다.

@@ -121,11 +121,22 @@ async function finishJob(page, id, rating) {
         .isChecked(),
       false,
     );
-    const csv = await page.request.get(
-      `${baseURL}/practice/checkout-devices.csv`,
-    );
-    assert.ok(csv.ok());
-    assert.ok((await csv.text()).includes("Mobile,1800,750"));
+    const csvLink = await page
+      .getByRole("link", { name: /연습용 표 내려받기/ })
+      .getAttribute("href");
+    if (csvLink.startsWith("data:")) {
+      assert.ok(
+        decodeURIComponent(csvLink.split(",").slice(1).join(",")).includes(
+          "Mobile,1800,750",
+        ),
+      );
+    } else {
+      const csv = await page.request.get(
+        `${baseURL}/practice/checkout-devices.csv`,
+      );
+      assert.ok(csv.ok());
+      assert.ok((await csv.text()).includes("Mobile,1800,750"));
+    }
     const csvDownload = page.waitForEvent("download");
     await page.getByRole("link", { name: /연습용 표 내려받기/ }).click();
     await csvDownload;
@@ -261,6 +272,14 @@ async function finishJob(page, id, rating) {
   try {
     const page = await browser.newPage({
       viewport: { width: 1440, height: 1000 },
+    });
+    const networkRequests = [];
+    page.on("request", (request) => {
+      if (
+        /^https?:/.test(request.url()) &&
+        request.resourceType() !== "document"
+      )
+        networkRequests.push(request.url());
     });
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
@@ -631,6 +650,8 @@ async function finishJob(page, id, rating) {
       false,
     );
     assert.deepEqual(errors, []);
+    if (baseURL.startsWith("file:") || process.env.PREVIEW_STANDALONE === "1")
+      assert.deepEqual(networkRequests, []);
     console.log(
       "PASS: 17 questions; planner regression and new analyst / 8 missions; job switching and isolated drafts; ratings and reflections; conditions-to-question direct start; self-reported discoveries; CSV/TXT downloads; next-action draft preservation; neutral/unobservable/17-burden cases; history; invalidation isolation; v1 migration; reload persistence; reset; mobile overflow; storage blocked; no browser errors",
     );
