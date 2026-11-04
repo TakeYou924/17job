@@ -8,8 +8,20 @@ export type ExplorationFocus = {
 export type Feeling = "interesting" | "burdensome" | "unclear";
 export type ConditionData = {
   id: number;
-  A: { check: string; question: string; trialQuestion: string | null };
-  B: { check: string; question: string; trialQuestion: string | null };
+  A: {
+    check: string;
+    question: string;
+    trialQuestion: string | null;
+    shortLabel: string;
+    quickCheck: string;
+  };
+  B: {
+    check: string;
+    question: string;
+    trialQuestion: string | null;
+    shortLabel: string;
+    quickCheck: string;
+  };
 };
 export function conditionPrompts(
   questions: Question[],

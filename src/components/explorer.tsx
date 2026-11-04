@@ -540,11 +540,12 @@ export default function Explorer() {
           <section className="flow">
             {heading(
               "STEP 01 · 나의 업무 환경",
-              "내가 확인해 볼 일의 조건",
-              "어울리는 직업을 정하는 대신, 응답한 부담을 실제로 확인할 질문과 작은 행동으로 연결했어요.",
+              "나의 업무 환경 요약",
+              "내가 고른 조건과 다음 행동을 간단히 정리했어요.",
             )}
             <ConditionResults
               prompts={prompts}
+              answers={s.answers}
               selectedId={s.focusQuestionId}
               onSelect={(id) => update({ focusQuestionId: id })}
               onStart={() => openJob("analyst")}

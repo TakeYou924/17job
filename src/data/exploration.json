@@ -5,12 +5,16 @@
       "A": {
         "check": "작업 시간·휴식 간격·신체 부담을 줄일 장비",
         "question": "움직임 자체와 쉬기 어려운 조건 중 무엇이 더 버거울까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "몸을 움직이는 작업",
+        "quickCheck": "휴식과 보조 장비가 있나요?"
       },
       "B": {
         "check": "집중 시간·과제 분량·중간 휴식",
         "question": "생각하는 과정과 오래 집중해야 하는 조건 중 무엇이 더 버거울까요?",
-        "trialQuestion": "짧은 표를 읽는 과정에서 무엇이 흥미롭거나 버거운지 확인해 볼까요?"
+        "trialQuestion": "짧은 표를 읽는 과정에서 무엇이 흥미롭거나 버거운지 확인해 볼까요?",
+        "shortLabel": "앉아서 생각·분석",
+        "quickCheck": "집중 시간과 분량을 조절할 수 있나요?"
       }
     },
     {
@@ -18,12 +22,16 @@
       "A": {
         "check": "응대 빈도·갈등 상황·도움을 요청할 경로",
         "question": "사람을 만나는 것과 갈등을 처리해야 하는 상황을 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "사람 직접 응대",
+        "quickCheck": "응대가 막힐 때 지원받을 수 있나요?"
       },
       "B": {
         "check": "장비 숙련 지원·안전 기준·고장 시 지원",
         "question": "장비를 다루는 것과 익숙하지 않은 상태에서 맡는 부담을 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "기계·장비 다루기",
+        "quickCheck": "장비 교육과 안전 지원이 있나요?"
       }
     },
     {
@@ -31,12 +39,16 @@
       "A": {
         "check": "실내에서의 이동·소음·공간 변화 가능성",
         "question": "실내라는 공간과 오래 같은 자리에 있어야 하는 조건 중 무엇이 버거울까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "실내 중심 환경",
+        "quickCheck": "작업 공간과 이동에 여유가 있나요?"
       },
       "B": {
         "check": "날씨·이동 거리·안전과 휴식 여건",
         "question": "실외라는 공간과 날씨·이동 같은 조건 중 무엇이 버거울까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "실외 중심 환경",
+        "quickCheck": "날씨·이동에 맞는 휴식 여건이 있나요?"
       }
     },
     {
@@ -44,12 +56,16 @@
       "A": {
         "check": "규칙을 바꿀 여지·문제를 탐색할 범위",
         "question": "명확한 기준 자체와 내 판단을 쓸 여지가 적은 상황을 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "정답이 명확한 문제",
+        "quickCheck": "방법을 개선할 여지가 있나요?"
       },
       "B": {
         "check": "목표·완료 기준·참고 사례와 피드백",
         "question": "정답이 열려 있는 것과 판단할 자료가 부족한 상황을 구분해 볼까요?",
-        "trialQuestion": "답이 확실하지 않을 때, 추가 자료를 찾는 과정과 판단을 보류하는 과정은 각각 어땠나요?"
+        "trialQuestion": "답이 확실하지 않을 때, 추가 자료를 찾는 과정과 판단을 보류하는 과정은 각각 어땠나요?",
+        "shortLabel": "정답이 열린 문제",
+        "quickCheck": "판단 기준과 참고 사례가 있나요?"
       }
     },
     {
@@ -57,12 +73,16 @@
       "A": {
         "check": "반복 주기·업무 다양성·개선 제안 여지",
         "question": "반복 그 자체와 변화시킬 여지가 없는 상황 중 무엇이 더 버거울까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "반복적인 과제",
+        "quickCheck": "업무를 다양하게 해볼 수 있나요?"
       },
       "B": {
         "check": "사전 학습 시간·인수인계·변경 안내",
         "question": "새로운 과제와 준비 없이 바뀌는 상황 중 무엇이 더 버거울까요?",
-        "trialQuestion": "새 자료가 도착해 판단을 다시 살펴보는 과정은 어땠나요?"
+        "trialQuestion": "새 자료가 도착해 판단을 다시 살펴보는 과정은 어땠나요?",
+        "shortLabel": "새롭고 변화하는 과제",
+        "quickCheck": "새 과제를 익힐 시간이 있나요?"
       }
     },
     {
@@ -70,12 +90,16 @@
       "A": {
         "check": "중간 공유·막혔을 때 질문할 경로",
         "question": "혼자 하는 시간과 도움을 받기 어려운 상황을 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "혼자 독립적으로 작업",
+        "quickCheck": "막힐 때 질문할 사람이 있나요?"
       },
       "B": {
         "check": "역할 구분·회의 빈도·비동기 소통 방식",
         "question": "협업 자체와 역할·의사소통이 불분명한 상황을 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "다른 사람과 협업",
+        "quickCheck": "역할과 소통 방식이 정해져 있나요?"
       }
     },
     {
@@ -83,12 +107,16 @@
       "A": {
         "check": "절차의 이유·예외 처리·개선 권한",
         "question": "정해진 절차와 개선할 여지가 없는 조건 중 무엇이 버거울까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "정해진 지침과 절차",
+        "quickCheck": "예외 처리나 개선 제안이 가능한가요?"
       },
       "B": {
         "check": "의사결정 범위·참고 사례·중간 피드백",
         "question": "스스로 결정하는 것과 기준·도움이 없는 상황을 구분해 볼까요?",
-        "trialQuestion": "선택지와 자료가 있어도 조사 방향을 직접 정하는 과정은 어땠나요?"
+        "trialQuestion": "선택지와 자료가 있어도 조사 방향을 직접 정하는 과정은 어땠나요?",
+        "shortLabel": "스스로 방향 결정",
+        "quickCheck": "결정 범위와 중간 피드백이 있나요?"
       }
     },
     {
@@ -96,12 +124,16 @@
       "A": {
         "check": "마감 예고·동시 업무 수·일정 조정 가능성",
         "question": "속도 자체와 준비·조정할 시간이 없는 조건을 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "빠른 속도·촉박한 마감",
+        "quickCheck": "일정을 조정할 수 있나요?"
       },
       "B": {
         "check": "중간 목표·진행 확인·일의 밀도",
         "question": "여유로운 일정과 진행 감각이 없는 상태 중 무엇이 버거울까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "여유로운 속도·일정",
+        "quickCheck": "중간 목표로 진행을 확인할 수 있나요?"
       }
     },
     {
@@ -109,12 +141,16 @@
       "A": {
         "check": "결정 권한·책임의 경계·검토와 지원",
         "question": "결정 자체와 결과를 혼자 감당해야 하는 조건을 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "결정과 결과 책임",
+        "quickCheck": "책임 범위와 지원이 명확한가요?"
       },
       "B": {
         "check": "실행 이유 공유·제안 권한·역할의 의미",
         "question": "지원 역할과 내 의견을 낼 수 없는 상황을 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "타인의 결정 지원·실행",
+        "quickCheck": "내 의견을 제안할 수 있나요?"
       }
     },
     {
@@ -122,12 +158,16 @@
       "A": {
         "check": "변경 예고·역할 합의·우선순위 재조정",
         "question": "변화 자체와 바뀌는 이유·기준을 모르는 조건을 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "자주 바뀌는 업무·역할",
+        "quickCheck": "변경 전에 안내받을 수 있나요?"
       },
       "B": {
         "check": "역할 확장·개선 과제·학습 기회",
         "question": "일정한 역할과 새롭게 배우기 어려운 상황을 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "일정하게 유지되는 역할",
+        "quickCheck": "역할을 넓히거나 배울 기회가 있나요?"
       }
     },
     {
@@ -135,12 +175,16 @@
       "A": {
         "check": "지표의 통제 가능성·평가 기간·과정 반영",
         "question": "수치 평가와 내가 통제하기 어려운 지표로 평가받는 조건을 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "수치·실적 중심 평가",
+        "quickCheck": "내가 통제할 수 있는 지표인가요?"
       },
       "B": {
         "check": "기여 기준·피드백의 구체성·평가 설명",
         "question": "과정 평가와 기준이 불명확한 평가를 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "과정·기여 중심 평가",
+        "quickCheck": "기여를 판단하는 기준이 명확한가요?"
       }
     },
     {
@@ -148,12 +192,16 @@
       "A": {
         "check": "급여 범위·상승 경로·다른 성장 기회",
         "question": "상승 폭의 제한이 생활 계획에 어떤 영향을 주는지 확인해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "일정하지만 상승 폭이 적은 소득",
+        "quickCheck": "급여 상승 경로가 있나요?"
       },
       "B": {
         "check": "소득 변동 폭·최저 보장·생활비 여유",
         "question": "어느 정도의 수입 변동까지 생활에서 감당할 수 있을까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "불규칙하지만 고소득 가능한 수입",
+        "quickCheck": "변동 폭과 최소 보장을 확인했나요?"
       }
     },
     {
@@ -161,12 +209,16 @@
       "A": {
         "check": "실제 근무 시간·연락 범위·휴식 보장",
         "question": "개인 시간 중 꼭 지키고 싶은 시간은 무엇일까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "소득을 위해 개인 시간 사용",
+        "quickCheck": "개인 시간을 보장받을 수 있나요?"
       },
       "B": {
         "check": "필요 생활비·근무 시간·소득 조정 여지",
         "question": "어느 정도 소득이 확보되어야 개인 시간을 선택할 수 있을까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "개인 시간을 위해 소득 제한",
+        "quickCheck": "필요한 생활비를 충족할 수 있나요?"
       }
     },
     {
@@ -174,12 +226,16 @@
       "A": {
         "check": "학습 지원·역할 확장·내부 이동 기회",
         "question": "안정성과 배울 기회 부족을 따로 살펴볼 수 있을까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "안정적이지만 성장 기회 제한",
+        "quickCheck": "학습과 역할 확장 기회가 있나요?"
       },
       "B": {
         "check": "실패 시 영향·안전망·도전 범위",
         "question": "어떤 실패의 영향이 가장 감당하기 어려울까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "성장 기회와 높은 실패 위험",
+        "quickCheck": "실패의 영향과 안전망은 어떤가요?"
       }
     },
     {
@@ -187,12 +243,16 @@
       "A": {
         "check": "피드백 빈도·기여의 가시성·감사 표현",
         "question": "어떤 피드백이 있어야 내 기여를 확인할 수 있을까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "성과에 대한 인정 부족",
+        "quickCheck": "기여에 대한 피드백을 받을 수 있나요?"
       },
       "B": {
         "check": "업무 목적·수혜자·개인 가치와의 연결",
         "question": "어떤 상황에서 일의 의미를 느끼는지 경험으로 확인해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "인정받지만 의미를 느끼기 어려움",
+        "quickCheck": "일의 목적과 수혜자를 알 수 있나요?"
       }
     },
     {
@@ -200,12 +260,16 @@
       "A": {
         "check": "도움받는 사람과의 접점·결과 확인",
         "question": "내 일이 누구에게 어떤 도움을 주는지 확인할 경로가 있을까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "성장하지만 도움의 보람 부족",
+        "quickCheck": "내 일이 주는 도움을 확인할 수 있나요?"
       },
       "B": {
         "check": "학습 시간·새 과제·성장 피드백",
         "question": "어떤 역량을 배우는 경험이 내게 필요한지 살펴볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "도움이 되지만 내 성장 부족",
+        "quickCheck": "배울 시간과 새로운 과제가 있나요?"
       }
     },
     {
@@ -213,12 +277,16 @@
       "A": {
         "check": "중간 산출물·작은 검증·진행 피드백",
         "question": "최종 결과를 기다리는 것과 중간 진행을 확인할 수 없는 조건을 구분해 볼까요?",
-        "trialQuestion": "단계마다 중간 결과가 보이면, 최종 원인을 확정하지 못해도 과정을 이어갈 수 있었나요?"
+        "trialQuestion": "단계마다 중간 결과가 보이면, 최종 원인을 확정하지 못해도 과정을 이어갈 수 있었나요?",
+        "shortLabel": "결과 확인까지 긴 시간",
+        "quickCheck": "중간 결과와 피드백을 볼 수 있나요?"
       },
       "B": {
         "check": "결과 축적·업무 연결·개선 기록",
         "question": "매일 끝나는 일과 결과가 남지 않는 느낌을 구분해 볼까요?",
-        "trialQuestion": null
+        "trialQuestion": null,
+        "shortLabel": "매일 확인되지만 쌓이지 않는 성과",
+        "quickCheck": "일의 결과가 남고 연결되나요?"
       }
     }
   ],

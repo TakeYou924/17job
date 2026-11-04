@@ -1,5 +1,7 @@
 "use client";
 import content from "@/data/exploration.json";
+import questions from "@/data/questions.json";
+import type { Answers } from "@/lib/analysis";
 import {
   toggleFeeling,
   type ExplorationFocus,
@@ -19,6 +21,7 @@ export function ConditionResults({
   onStart,
   onBrowse,
   savedFocus,
+  answers,
 }: {
   prompts: ReturnType<typeof conditionPrompts>;
   selectedId: number | null;
@@ -26,6 +29,7 @@ export function ConditionResults({
   onStart: () => void;
   onBrowse: () => void;
   savedFocus: ExplorationFocus | null;
+  answers: Answers;
 }) {
   const renderPrompt = (
     prompt: ReturnType<typeof conditionPrompts>[number],
@@ -62,96 +66,161 @@ export function ConditionResults({
       )}
     </li>
   );
+  const visible = prompts.slice(0, 3);
+  const bothCount = questions.filter(
+    (question) => answers[question.id] === "both",
+  ).length;
   return (
-    <>
-      <section
-        className="panel condition-results"
-        aria-labelledby="conditions-heading"
-      >
+    <section
+      className="panel result-sheet"
+      aria-labelledby="conditions-heading"
+    >
+      <div className="sheet-heading">
         <span className="eyebrow">MY WORK CONDITIONS</span>
-        <h2 id="conditions-heading">일할 때 확인할 조건</h2>
-        <p className="muted small">
-          직업을 정하는 대신, 실제 환경을 알아볼 질문으로 바꿨어요. 표시 순서는
-          설문 순서이며 중요도 순위가 아닙니다.
+        <h2 id="conditions-heading">내가 일할 때 확인할 조건</h2>
+        <p className="sheet-counts">
+          부담으로 표시 {prompts.length}개 <span aria-hidden="true">·</span> 둘
+          다 문제 없음 {bothCount}개
         </p>
-        {prompts.length ? (
+      </div>
+      <div className="sheet-section">
+        <h3>부담으로 표시한 환경</h3>
+        {visible.length ? (
           <>
-            {selectedId &&
-              prompts.find((prompt) => prompt.id === selectedId) && (
-                <p className="selected-question-note" role="status">
-                  이번 탐색에 담은 질문:{" "}
-                  {prompts.find((prompt) => prompt.id === selectedId)?.question}
-                </p>
-              )}
-            <ul className="burden-list condition-list">
-              {prompts.slice(0, 3).map(renderPrompt)}
+            <ul className="condition-tags">
+              {visible.map((prompt) => (
+                <li key={prompt.id}>{prompt.shortLabel}</li>
+              ))}
             </ul>
             {prompts.length > 3 && (
-              <details className="more-conditions">
-                <summary>
-                  나머지 확인할 조건 {prompts.length - 3}개 펼치기
-                </summary>
-                <p className="small muted">
-                  먼저 보인 세 항목과 동일한 응답입니다. 중요도를 다르게
-                  해석하지 않아요.
-                </p>
-                <ul className="burden-list condition-list">
-                  {prompts.slice(3).map(renderPrompt)}
-                </ul>
-              </details>
+              <p className="small muted">
+                설문 순서로 3개를 먼저 표시했어요. 나머지 {prompts.length - 3}
+                개는 전체 응답에서 확인할 수 있어요.
+              </p>
             )}
           </>
         ) : (
-          <div className="empty-state">
+          <div className="sheet-neutral">
             <h3>특정한 부담은 아직 드러나지 않았어요.</h3>
             <p>
-              모두 ‘둘 다 문제 없음’으로 답했습니다. 어떤 일을 좋아하거나
-              잘한다는 뜻은 아니에요. 작은 체험에서 어떤 과정이 흥미롭거나
-              버거운지 관찰해 보세요.
+              모두 ‘둘 다 문제 없음’으로 답했어요. 선호나 능력이 확인된 것은
+              아니에요.
             </p>
           </div>
         )}
-      </section>
-      <section
-        className="panel trial-invitation"
-        aria-labelledby="trial-heading"
-      >
+      </div>
+      <div className="sheet-section">
+        <h3>일자리를 알아볼 때 확인해 보세요</h3>
+        {visible.length ? (
+          <ul className="quick-checks">
+            {visible.map((prompt) => (
+              <li key={prompt.id}>
+                <span aria-hidden="true">✓</span>
+                {prompt.quickCheck}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="sheet-neutral-prompt">
+            작은 체험에서 무엇이 흥미롭고 버거운지 먼저 살펴보세요.
+          </p>
+        )}
+      </div>
+      <div className="sheet-section sheet-next">
         <div>
-          <span className="eyebrow">ONE SMALL EXPERIENCE</span>
-          <h2 id="trial-heading">{content.analyst.title}</h2>
-          <p>{content.analyst.description}</p>
-          <p className="small muted">
-            {content.analyst.duration} · 관련 직무: 데이터 분석가
-          </p>
-          {savedFocus && (
-            <div className="saved-focus-note">
-              <b>이어서 볼 체험의 질문</b>
-              <p>{savedFocus.question}</p>
-              <p className="small muted">
-                이미 시작한 체험의 질문과 답변을 유지합니다. 새로 고른 조건은
-                별도의 확인 목록으로 남겨요.
-              </p>
-            </div>
-          )}
-          <h3>이번에 관찰할 것</h3>
+          <span className="eyebrow">다음 한 걸음</span>
+          <h3>{content.analyst.title}</h3>
           <p>
-            ‘숫자를 비교하는 과정’과 ‘원인을 아직 확정할 수 없는 상황’을 각각
-            어떻게 느끼는지 살펴보세요. 부담이 겹치는지와 관계없이 체험할 수
-            있어요.
+            표를 읽고, 원인이 아직 확실하지 않을 때 어떻게 느끼는지 살펴보세요.
           </p>
+          <span className="small muted">{content.analyst.duration}</span>
         </div>
-        <div className="trial-actions">
-          <button className="primary" onClick={onStart}>
-            이 상황을 직접 확인해 보기 →
-          </button>
-          <button className="text-button" onClick={onBrowse}>
-            다른 경험도 둘러보기
-          </button>
+        <button className="primary" onClick={onStart}>
+          이 상황을 직접 확인해 보기 →
+        </button>
+      </div>
+      {savedFocus && (
+        <div className="saved-focus-note">
+          <b>이어서 볼 체험의 질문</b>
+          <p>{savedFocus.question}</p>
+          <small>이미 시작한 질문과 답변은 유지됩니다.</small>
         </div>
-      </section>
-    </>
+      )}
+      <p className="sheet-footnote">
+        표시한 응답을 요약한 결과예요. 직무 적합도나 부담의 심각도를 판단한 것은
+        아닙니다.
+      </p>
+      <div className="sheet-details">
+        <details className="full-responses">
+          <summary>전체 응답 보기 · 17문항</summary>
+          <p className="small muted">
+            A/B는 감당하기 더 어려운 환경입니다. 선택하지 않은 반대 환경의
+            선호·능력은 추론하지 않았어요.
+          </p>
+          <div className="response-table-wrap">
+            <table>
+              <caption className="sr-only">17문항 전체 응답</caption>
+              <thead>
+                <tr>
+                  <th scope="col">항목</th>
+                  <th scope="col">내 응답</th>
+                </tr>
+              </thead>
+              <tbody>
+                {questions.map((question) => {
+                  const answer = answers[question.id];
+                  return (
+                    <tr key={question.id}>
+                      <th scope="row">
+                        {question.id}. {question.title}
+                      </th>
+                      <td>
+                        {answer === "A"
+                          ? `A · ${question.a}`
+                          : answer === "B"
+                            ? `B · ${question.b}`
+                            : answer === "both"
+                              ? "둘 다 문제 없음"
+                              : "미응답"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </details>
+        <details className="result-explanations">
+          <summary>조건 설명과 확인 질문 펼치기</summary>
+          <p className="small muted">
+            아직 모르는 점과 체험으로 확인할 수 있는 범위를 살펴보세요. 질문을
+            골라도 체험 시작은 자유롭습니다.
+          </p>
+          {selectedId && prompts.find((prompt) => prompt.id === selectedId) && (
+            <p className="selected-question-note" role="status">
+              확인 목록에 담은 질문:{" "}
+              {prompts.find((prompt) => prompt.id === selectedId)?.question}
+            </p>
+          )}
+          {prompts.length ? (
+            <ul className="burden-list condition-list">
+              {prompts.map(renderPrompt)}
+            </ul>
+          ) : (
+            <p className="helper">
+              선택한 부담 조건이 없어요. 중립적인 관찰 질문으로 체험을
+              시작합니다.
+            </p>
+          )}
+        </details>
+      </div>
+      <button className="text-button sheet-browse" onClick={onBrowse}>
+        다른 경험도 둘러보기 →
+      </button>
+    </section>
   );
 }
+
 export function ObservationGuide({
   focus,
   mission,

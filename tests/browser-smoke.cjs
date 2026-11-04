@@ -301,18 +301,55 @@ async function finishJob(page, id, rating) {
         .click();
     }
     await page
-      .getByRole("heading", { name: "내가 확인해 볼 일의 조건", exact: true })
+      .getByRole("heading", { name: "나의 업무 환경 요약", exact: true })
       .waitFor();
     assert.equal(await page.locator(".burden-list li").count(), 3);
+    assert.equal(await page.locator(".condition-tags li").count(), 3);
+    assert.equal(await page.locator(".quick-checks li").count(), 3);
+    assert.equal(await page.locator(".condition-list li:visible").count(), 0);
+    assert.equal(
+      await page.locator(".response-table-wrap tbody tr:visible").count(),
+      0,
+    );
+    await page.getByText("전체 응답 보기 · 17문항", { exact: true }).click();
+    assert.equal(
+      await page.locator(".response-table-wrap tbody tr").count(),
+      17,
+    );
+    const originalQuestions = require("../src/data/questions.json");
+    for (let index = 0; index < 17; index++) {
+      const expected =
+        index === 0
+          ? `A · ${originalQuestions[index].a}`
+          : index === 1 || index === 3
+            ? `B · ${originalQuestions[index].b}`
+            : "둘 다 문제 없음";
+      assert.equal(
+        await page
+          .locator(".response-table-wrap tbody tr")
+          .nth(index)
+          .locator("td")
+          .innerText(),
+        expected,
+      );
+    }
+    await page.getByText("전체 응답 보기 · 17문항", { exact: true }).click();
+
     await page.reload();
     await page
-      .getByRole("heading", { name: "내가 확인해 볼 일의 조건", exact: true })
+      .getByRole("heading", { name: "나의 업무 환경 요약", exact: true })
       .waitFor();
+    await page
+      .getByText("조건 설명과 확인 질문 펼치기", { exact: true })
+      .click();
     await page
       .getByRole("button", {
         name: "문제의 성격 질문을 탐색 기록에 담기",
         exact: true,
       })
+      .click();
+    await page
+      .getByText("조건 설명과 확인 질문 펼치기", { exact: true })
       .click();
     await page.screenshot({
       path: "/tmp/17job-conditions-desktop.png",
@@ -326,7 +363,7 @@ async function finishJob(page, id, rating) {
     });
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page
-      .getByRole("button", { name: "다른 경험도 둘러보기", exact: true })
+      .getByRole("button", { name: "다른 경험도 둘러보기", exact: false })
       .click();
     assert.equal(await page.locator(".job-card").count(), 5);
     for (const id of ["designer", "marketer", "operator"]) {
@@ -377,6 +414,9 @@ async function finishJob(page, id, rating) {
     await finishJob(page, "analyst", 3);
     await page
       .getByRole("button", { name: "나의 업무 환경", exact: true })
+      .click();
+    await page
+      .getByText("조건 설명과 확인 질문 펼치기", { exact: true })
       .click();
     await page
       .getByRole("button", {
@@ -572,7 +612,7 @@ async function finishJob(page, id, rating) {
       }, value);
       await edge.goto(baseURL);
       await edge
-        .getByRole("heading", { name: "내가 확인해 볼 일의 조건", exact: true })
+        .getByRole("heading", { name: "나의 업무 환경 요약", exact: true })
         .waitFor();
       await noOverflow(edge);
       if (variant === "neutral") {
@@ -584,12 +624,34 @@ async function finishJob(page, id, rating) {
           .waitFor();
         assert.equal(await edge.locator(".condition-list li").count(), 0);
       } else {
+        assert.equal(await edge.locator(".condition-tags li").count(), 3);
+        assert.equal(await edge.locator(".quick-checks li").count(), 3);
         assert.equal(
           await edge.locator(".condition-list li:visible").count(),
-          3,
+          0,
         );
         await edge
-          .getByText("나머지 확인할 조건 14개 펼치기", { exact: true })
+          .getByText("전체 응답 보기 · 17문항", { exact: true })
+          .click();
+        assert.equal(
+          await edge.locator(".response-table-wrap tbody tr").count(),
+          17,
+        );
+        const originalQuestions = require("../src/data/questions.json");
+        for (let index = 0; index < 17; index++)
+          assert.equal(
+            await edge
+              .locator(".response-table-wrap tbody tr")
+              .nth(index)
+              .locator("td")
+              .innerText(),
+            `B · ${originalQuestions[index].b}`,
+          );
+        await edge
+          .getByText("전체 응답 보기 · 17문항", { exact: true })
+          .click();
+        await edge
+          .getByText("조건 설명과 확인 질문 펼치기", { exact: true })
           .click();
         assert.equal(
           await edge.locator(".condition-list li:visible").count(),
