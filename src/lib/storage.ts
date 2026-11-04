@@ -1,23 +1,241 @@
-import type { Answers } from './analysis.ts';
-import type { Feedback } from './feedback.ts';
-export const STORAGE_KEY = '17job:v1';
-export type Stage = 'home' | 'survey' | 'results' | 'jobs' | 'mission' | 'complete';
-export type Progress = { version: 1; stage: Stage; answers: Answers; question: number; mission: number; responses: string[]; feedback: (Feedback | null)[]; interest: number | null; reflection: string; rated: boolean };
-export const initialProgress: Progress = {version:1,stage:'home',answers:{},question:0,mission:0,responses:['','','',''],feedback:[null,null,null,null],interest:null,reflection:'',rated:false};
+import type { Answers } from "./analysis.ts";
+import type { Feedback } from "./feedback.ts";
+// Keep the original key so existing users' first experience can be migrated.
+export const STORAGE_KEY = "17job:v1";
+export const JOB_IDS = [
+  "planner",
+  "analyst",
+  "designer",
+  "marketer",
+  "operator",
+] as const;
+export type JobId = (typeof JOB_IDS)[number];
+export type Stage =
+  "home" | "survey" | "results" | "jobs" | "mission" | "complete";
+export type Experience = {
+  mission: number;
+  responses: string[];
+  choices: (string | null)[];
+  feedback: (Feedback | null)[];
+  interest: number | null;
+  reflection: string;
+  rated: boolean;
+};
+export type Progress = {
+  version: 2;
+  stage: Stage;
+  answers: Answers;
+  question: number;
+  activeJob: JobId;
+  experiences: Partial<Record<JobId, Experience>>;
+};
+export function newExperience(): Experience {
+  return {
+    mission: 0,
+    responses: ["", "", "", ""],
+    choices: [null, null, null, null],
+    feedback: [null, null, null, null],
+    interest: null,
+    reflection: "",
+    rated: false,
+  };
+}
+export const initialProgress: Progress = {
+  version: 2,
+  stage: "home",
+  answers: {},
+  question: 0,
+  activeJob: "planner",
+  experiences: {},
+};
+export function experienceFor(
+  state: Progress,
+  id: JobId = state.activeJob,
+): Experience {
+  return state.experiences[id] ?? newExperience();
+}
+export function isComplete(experience: Experience): boolean {
+  return experience.feedback.every(Boolean);
+}
+export function updateExperience(
+  state: Progress,
+  patch: Partial<Experience>,
+  id: JobId = state.activeJob,
+): Progress {
+  return {
+    ...state,
+    experiences: {
+      ...state.experiences,
+      [id]: { ...experienceFor(state, id), ...patch },
+    },
+  };
+}
+export function editResponse(state: Progress, response: string): Progress {
+  const e = experienceFor(state);
+  return updateExperience(state, {
+    responses: e.responses.map((text, i) =>
+      i === e.mission ? response : text,
+    ),
+    feedback: e.feedback.map((feedback, i) =>
+      i >= e.mission ? null : feedback,
+    ),
+    rated: false,
+  });
+}
+export function selectJob(state: Progress, id: JobId): Progress {
+  const e = experienceFor(state, id);
+  const unanswered = e.feedback.findIndex((f) => !f);
+  return {
+    ...updateExperience(
+      state,
+      { mission: unanswered < 0 ? e.mission : unanswered },
+      id,
+    ),
+    activeJob: id,
+    stage:
+      Object.keys(state.answers).length !== 17
+        ? "survey"
+        : isComplete(e)
+          ? "complete"
+          : "mission",
+  };
+}
+export function chooseOption(state: Progress, choice: string): Progress {
+  if (!["A", "B", "C", "D"].includes(choice)) return state;
+  const e = experienceFor(state);
+  return updateExperience(state, {
+    choices: e.choices.map((previous, i) =>
+      i === e.mission ? choice : previous,
+    ),
+    feedback: e.feedback.map((feedback, i) =>
+      i >= e.mission ? null : feedback,
+    ),
+    rated: false,
+  });
+}
+function record(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function validExperience(
+  value: unknown,
+): value is Experience & Record<string, unknown> {
+  if (!record(value)) return false;
+  return (
+    Number.isInteger(value.mission) &&
+    Number(value.mission) >= 0 &&
+    Number(value.mission) <= 3 &&
+    Array.isArray(value.responses) &&
+    value.responses.length === 4 &&
+    value.responses.every((x) => typeof x === "string" && x.length <= 4000) &&
+    (value.choices === undefined ||
+      (Array.isArray(value.choices) &&
+        value.choices.length === 4 &&
+        value.choices.every(
+          (x) => x === null || ["A", "B", "C", "D"].includes(x),
+        ))) &&
+    Array.isArray(value.feedback) &&
+    value.feedback.length === 4 &&
+    value.feedback.every(
+      (f) =>
+        f === null ||
+        (record(f) &&
+          typeof f.observation === "string" &&
+          typeof f.next === "string" &&
+          f.source === "local"),
+    ) &&
+    (value.interest === null ||
+      (Number.isInteger(value.interest) &&
+        Number(value.interest) >= 1 &&
+        Number(value.interest) <= 5)) &&
+    typeof value.reflection === "string" &&
+    value.reflection.length <= 4000 &&
+    typeof value.rated === "boolean"
+  );
+}
+function normalizeExperience(e: Experience): Experience {
+  const { mission, responses, feedback, interest, reflection, rated } = e;
+  const choices = e.choices ?? [null, null, null, null];
+  const result: Experience = structuredClone({
+    mission,
+    responses,
+    choices,
+    feedback,
+    interest,
+    reflection,
+    rated,
+  });
+  const first = result.feedback.findIndex((f) => !f);
+  if (first >= 0) {
+    // Later feedback cannot remain valid after an earlier stage is invalidated.
+    result.feedback.fill(null, first);
+    result.mission = Math.min(result.mission, first);
+    result.rated = false;
+  }
+  if (result.interest === null) result.rated = false;
+  return result;
+}
 export function parseProgress(raw: string | null): Progress {
   try {
     if (!raw) return structuredClone(initialProgress);
-    const s = JSON.parse(raw);
-    const stages = ['home','survey','results','jobs','mission','complete'];
-    if (s.version !== 1 || !stages.includes(s.stage) || !s.answers || typeof s.answers !== 'object' || Array.isArray(s.answers)
-      || Object.entries(s.answers).some(([k,v]) => !/^([1-9]|1[0-7])$/.test(k) || !['A','B','both'].includes(v as string))
-      || !Number.isInteger(s.question) || s.question<0 || s.question>16 || !Number.isInteger(s.mission) || s.mission<0 || s.mission>3
-      || !Array.isArray(s.responses) || s.responses.length!==4 || s.responses.some((x:unknown)=>typeof x!=='string' || x.length>4000)
-      || !Array.isArray(s.feedback) || s.feedback.length!==4 || s.feedback.some((f:unknown)=>f!==null && (typeof f!=='object' || typeof (f as Feedback).observation!=='string' || typeof (f as Feedback).next!=='string' || (f as Feedback).source!=='local'))
-      || !(s.interest===null || Number.isInteger(s.interest) && s.interest>=1 && s.interest<=5) || typeof s.reflection!=='string' || s.reflection.length>4000 || typeof s.rated!=='boolean') return structuredClone(initialProgress);
-    if (['results','jobs','mission','complete'].includes(s.stage) && Object.keys(s.answers).length!==17) s.stage='survey';
-    if (s.stage==='complete' && s.feedback.some((f:unknown)=>!f)) s.stage='mission';
-    if (s.stage==='mission') { const first=s.feedback.findIndex((f:unknown)=>!f); if(first>=0 && s.mission>first) s.mission=first; }
-    return s as Progress;
-  } catch { return structuredClone(initialProgress); }
+    const value: unknown = JSON.parse(raw);
+    if (!record(value)) return structuredClone(initialProgress);
+    const stages = ["home", "survey", "results", "jobs", "mission", "complete"];
+    if (
+      ![1, 2].includes(Number(value.version)) ||
+      !stages.includes(value.stage as string) ||
+      !record(value.answers) ||
+      Object.entries(value.answers).some(
+        ([k, v]) =>
+          !/^([1-9]|1[0-7])$/.test(k) ||
+          !["A", "B", "both"].includes(v as string),
+      ) ||
+      !Number.isInteger(value.question) ||
+      Number(value.question) < 0 ||
+      Number(value.question) > 16
+    )
+      return structuredClone(initialProgress);
+    let state: Progress;
+    if (value.version === 1) {
+      if (!validExperience(value)) return structuredClone(initialProgress);
+      state = {
+        version: 2,
+        stage: value.stage as Stage,
+        answers: value.answers as Answers,
+        question: Number(value.question),
+        activeJob: "planner",
+        experiences: { planner: normalizeExperience(value) },
+      };
+    } else {
+      if (
+        value.version !== 2 ||
+        !JOB_IDS.includes(value.activeJob as JobId) ||
+        !record(value.experiences)
+      )
+        return structuredClone(initialProgress);
+      const experiences: Progress["experiences"] = {};
+      for (const id of JOB_IDS) {
+        const e = value.experiences[id];
+        // Isolate a damaged job record rather than losing all other experiences.
+        if (validExperience(e)) experiences[id] = normalizeExperience(e);
+      }
+      state = {
+        version: 2,
+        stage: value.stage as Stage,
+        answers: value.answers as Answers,
+        question: Number(value.question),
+        activeJob: value.activeJob as JobId,
+        experiences,
+      };
+    }
+    if (
+      ["results", "jobs", "mission", "complete"].includes(state.stage) &&
+      Object.keys(state.answers).length !== 17
+    )
+      state.stage = "survey";
+    if (state.stage === "complete" && !isComplete(experienceFor(state)))
+      state.stage = "mission";
+    return state;
+  } catch {
+    return structuredClone(initialProgress);
+  }
 }

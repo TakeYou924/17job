@@ -5,3 +5,172 @@
 @media(max-width:760px){.site-header{padding:20px 22px;gap:25px}.brand{font-size:28px}.header-note{display:none}nav{margin-left:auto;gap:22px}nav button{font-size:11px}.hero{padding:40px 24px 30px;grid-template-columns:1fr;gap:10px}.hero h1{font-size:40px}.hero-copy>p{font-size:13px}.hero-art{height:380px;min-width:0;max-width:470px;width:100%;margin:auto;transform:scale(.9)}.note-one{left:-5px;top:0}.note-two{right:-10px;bottom:10px}.orbit-two{width:360px}.orbit-one{width:330px;height:330px}.hero-meta{gap:15px}.how-section{padding:32px 24px;grid-template-columns:1fr;gap:27px}.how-section h2{max-width:none;font-size:23px}.steps{grid-template-columns:1fr;gap:23px}.step{display:grid;grid-template-columns:30px 1fr;gap:0 12px}.step>span{grid-row:span 2;font-size:12px;padding-top:2px}.step h3{margin-bottom:4px;font-size:16px}.step p{font-size:12px;max-width:400px}.jobs-section{padding:42px 24px 10px}.section-row{align-items:flex-start;flex-wrap:wrap;gap:8px}.section-row h2{font-size:24px}.job-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.job-card{padding:19px}.job-card h3{font-size:20px}.job-card>p{font-size:12px}.gentle-note{margin:30px auto 40px;font-size:10px;max-width:400px}footer{padding:24px;flex-direction:column;gap:13px}footer>div{flex-wrap:wrap;gap:12px}.flow{padding:35px 24px 50px}.section-heading h1{font-size:29px}.section-heading p{font-size:13px;margin-top:13px}.section-heading{margin-bottom:28px}.question-panel{padding:25px 20px;margin-top:25px}.question-panel h2{font-size:21px}.option{padding:17px 14px;gap:12px;font-size:13px}.actions{gap:12px}.actions>.small{display:none}.actions .primary,.actions .secondary{font-size:12px;padding:12px 15px}.result-layout{grid-template-columns:1fr}.panel{padding:25px 20px}.burden-list li{grid-template-columns:100px 1fr;gap:10px}.burden-list p{font-size:12px}.result-aside{margin-bottom:10px}.mission-layout{grid-template-columns:1fr;gap:25px}.mission-sidebar{position:static}.mission-sidebar>.job-icon,.mission-sidebar>.eyebrow,.mission-sidebar>p,.mission-sidebar>.small{display:none}.mission-sidebar>.text-button{margin-bottom:12px}.mission-sidebar h2{font-size:19px}.mission-sidebar ol{display:flex;margin:15px 0 0;gap:5px}.mission-sidebar li{flex:1}.mission-sidebar li button{font-size:0;padding:0}.mission-sidebar li span{font-size:12px;width:100%;border-radius:5px;height:26px}.scenario{padding:18px}.mission-content h2{font-size:21px}.feedback{padding:23px 20px}.completion-banner{padding:23px 20px;gap:15px}.completion-banner h2{font-size:19px}.completion-banner p{font-size:12px}.interest-options{grid-template-columns:1fr;gap:8px}.interest-options label{flex-direction:row;justify-content:flex-start;text-align:left;padding:10px 15px;font-size:13px;gap:15px}.interest-options label>span{font-size:23px}.textarea-meta{font-size:9px}.environment-note{font-size:10px}.modal{padding:25px}.mobile-only{display:block}}
 @media(max-width:480px){.job-grid{grid-template-columns:1fr}.hero h1{font-size:36px}.hero-art{transform:scale(.84);margin-top:-10px;margin-bottom:-10px}.floating-note{padding:12px}.note-one{left:-25px}.note-two{right:-25px}.explore-window{width:300px}.art-caption{font-size:6px}.job-card{padding:24px}.card-top{margin-bottom:17px}.job-card>p{min-height:0}.section-heading h1{font-size:27px}.primary.large{width:100%}.completion-banner>span{font-size:35px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* Job-specific evidence and reflection history */
+.data-table-wrap {
+  overflow-x: auto;
+  margin: 22px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  max-width: 100%;
+}
+.data-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+.data-table-wrap caption {
+  text-align: left;
+  padding: 13px 15px;
+  background: #edf2e7;
+  font-size: 11px;
+  color: #617455;
+  caption-side: top;
+}
+.data-table-wrap th,
+.data-table-wrap td {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.data-table-wrap th {
+  color: #697c5d;
+  background: #f5f7f0;
+  font-weight: 600;
+}
+.data-table-wrap tbody tr:last-child td {
+  border: 0;
+}
+.experience-history {
+  margin-top: 25px;
+}
+.experience-history ul {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+}
+.experience-history li {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-top: 1px solid var(--line);
+  padding: 18px 0;
+}
+.experience-history li:last-child {
+  padding-bottom: 0;
+}
+.experience-history li > div {
+  min-width: 0;
+  flex: 1;
+}
+.experience-history .job-icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  font-size: 22px;
+}
+.experience-history h3 {
+  font-size: 16px;
+}
+.experience-history .text-button {
+  flex-shrink: 0;
+}
+.history-reflection {
+  white-space: pre-wrap;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #728167;
+  margin-top: 7px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 480px) {
+  .data-table-wrap th,
+  .data-table-wrap td {
+    padding: 10px 9px;
+    font-size: 10px;
+  }
+  .experience-history li {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .experience-history li > div {
+    flex-basis: calc(100% - 48px);
+  }
+  .experience-history li > .text-button {
+    margin-left: 48px;
+  }
+  .experience-history h3 {
+    font-size: 15px;
+  }
+}
+.mission-choices {
+  margin-top: 28px;
+}
+.mission-choices legend {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 17px;
+  line-height: 1.8;
+}
+.mission-choices .option {
+  padding: 15px;
+  font-size: 13px;
+}
+.completion-review {
+  margin-bottom: 28px;
+}
+.completion-review > h2 {
+  margin: 12px 0;
+}
+.completion-review > p {
+  font-size: 13px;
+  margin-top: 12px;
+}
+.completion-review h3 {
+  font-size: 17px;
+  margin: 22px 0 10px;
+}
+.completion-review ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.completion-review li {
+  margin-bottom: 20px;
+}
+.completion-review li b {
+  font-size: 13px;
+  font-weight: 600;
+}
+.completion-review li p,
+.completion-review .review-grid p,
+.follow-up p {
+  font-size: 12px;
+  color: #728167;
+  line-height: 1.9;
+  margin-top: 7px;
+}
+.review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+.follow-up {
+  background: #eff4e8;
+  padding: 0 20px 20px;
+  border-radius: 8px;
+  margin-top: 25px;
+  display: flow-root;
+}
+@media (max-width: 760px) {
+  .review-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .mission-choices .option {
+    padding: 13px 10px;
+    font-size: 12px;
+    gap: 10px;
+  }
+}
